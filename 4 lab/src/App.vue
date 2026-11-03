@@ -4,13 +4,22 @@ import { computed } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from './stores/auth'
-const auth = useAuthStore(), router = useRouter()
+
+const auth = useAuthStore()
+const router = useRouter()
 const { user, pending } = storeToRefs(auth)
 const isAdmin = computed(() => user.value?.role === 'ADMIN')
+
 async function logout() {
-  try { await auth.logout() } catch {} finally { router.push('/login') }
+  try {
+    await auth.logout()
+  } catch {
+  } finally {
+    router.push('/login')
+  }
 }
 </script>
+
 <template>
   <header>
     <h1>Управление студентами</h1>
@@ -27,5 +36,7 @@ async function logout() {
       </template>
     </nav>
   </header>
-  <main><RouterView /></main>
+  <main>
+    <RouterView />
+  </main>
 </template>

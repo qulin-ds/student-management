@@ -5,12 +5,16 @@ import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
 import './styles/main.css'
+
 async function start() {
-  const app = createApp(App), pinia = createPinia()
+  const app = createApp(App)
+  const pinia = createPinia()
+
   app.use(pinia)
   await useAuthStore(pinia).restoreSession()
   app.use(router)
   await router.isReady()
   app.mount('#app')
 }
+
 start()
