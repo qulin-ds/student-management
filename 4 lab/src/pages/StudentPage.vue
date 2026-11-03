@@ -1,17 +1,18 @@
 <script setup>
-// Назначение: карточка; вход prop isu:String из router, выход — поля StudentDto и действия.
-// TODO: watch(() => props.isu, ..., {immediate:true}); проверить целое 100000..999999;
-// students.loadOne → GET /api/user/students/{isu}, USER/ADMIN, ответ {data:StudentDto}.
-// TODO: Показать ISU,name,group,dormitory,room,checkin_date,is_foreign,note, pending/ErrorMessage.
-// 404 — студент не найден, 403 — отказ, 401 — через auth; не оставлять старую selected.
-// TODO: Удаление ADMIN с подтверждением → DELETE /api/admin/students/{isu}, после 204 → /students.
-// Проверка: прямой URL, смена ISU без перемонтирования, 404 и отмена удаления.
-import { RouterLink } from 'vue-router'
-const props = defineProps({ isu: { type: String, required: true } })
+// Загружает карточку студента и показывает доступные ADMIN-действия.
+import {computed,onMounted,watch} from 'vue'
+import {useRouter,RouterLink} from 'vue-router'
+import {storeToRefs} from 'pinia'
+import {useAuthStore} from '../stores/auth'
+import {useStudentsStore} from '../stores/students'
+import LoadingIndicator from '../components/LoadingIndicator.vue'
+import ErrorMessage from '../components/ErrorMessage.vue'
+const props=defineProps({isu:{type:String,required:true}}),router=useRouter(),store=useStudentsStore(),auth=useAuthStore()
+const {selected,pending,error}=storeToRefs(store),isAdmin=computed(()=>auth.user?.role==='ADMIN')
+async function load(){try{await store.loadOne(props.isu)}catch{}}
+async function remove(){if(!isAdmin.value||!confirm('Удалить студента?'))return;try{await store.remove(props.isu);router.push('/students')}catch{}}
+watch(()=>props.isu,load);onMounted(load)
 </script>
-
-<template>
-  <section><h2>Карточка — заготовка</h2><p>Параметр URL: {{ props.isu }}. Запись не запрашивалась.</p>
-    <RouterLink :to="'/students/' + props.isu + '/edit'">Заготовка редактирования</RouterLink>
-    <button disabled type="button">Удалить — заготовка</button></section>
-</template>
+<template><section><h2>Карточка студента</h2><LoadingIndicator :active="pending"/><ErrorMessage :error="error"/>
+<dl v-if="selected"><dt>ИСУ</dt><dd>{{selected.ISU}}</dd><dt>ФИО</dt><dd>{{selected.name}}</dd><dt>Группа</dt><dd>{{selected.group}}</dd><dt>Общежитие</dt><dd>{{selected.dormitory}}</dd><dt>Комната</dt><dd>{{selected.room}}</dd><dt>Дата заселения</dt><dd>{{selected.checkin_date}}</dd><dt>Иностранец</dt><dd>{{selected.is_foreign?'Да':'Нет'}}</dd><dt>Заметка</dt><dd>{{selected.note}}</dd></dl>
+<RouterLink to="/students">К списку</RouterLink><template v-if="isAdmin&&selected"><RouterLink :to="`/students/${props.isu}/edit`">Изменить</RouterLink><button @click="remove">Удалить</button></template></section></template>

@@ -1,22 +1,29 @@
-// Назначение: единственная транспортная граница для api/auth.js и api/students.js.
-// Вход: path относительно /api и options (method/body/signal/auth); выход: Promise разобранного JSON,
-// undefined для 204; при ошибке — исключение с status/code/message/details.
-// TODO: 1. Собрать URL из API_BASE_URL; сериализовать body и Content-Type только при наличии тела.
-// TODO: 2. Выполнить fetch с AbortSignal; проверить response.ok, отдельно обработать пустой 204.
-// TODO: 3. Прочитать {error:{code,message,status,timestamp,details}} из GlobalExceptionHandler.
-// Различать 400 формат, 401 сессия, 403 права, 404 запись, 409 конфликт, 422 поля, 500 сервер;
-// сетевой сбой без HTTP-статуса показать как недоступность сервера, AbortError не как ошибку пользователю.
-// TODO: 4. Добавлять Authorization: Bearer <accessToken> только в защищённые запросы.
-// TODO: 5. На 401 защищённого запроса выполнить ОДИН общий POST /auth/refresh {refreshToken}:
-// параллельные запросы ждут один Promise; сохранить ОБА новых токена (backend отзывает старый refresh).
-// Повторить исходный запрос только один раз. Не обновлять на 403 и на login/register/refresh/logout.
-// При неудаче refresh очистить сессию через stores/auth.js; избежать циклических импортов,
-// например передать callbacks получения/обновления токенов из store при инициализации.
-// TODO: Проверить JSON/204, offline, 401 одновременно у двух запросов, 403 без refresh, отмену.
-// Роли: /user/students — USER/ADMIN, /admin/students — ADMIN, /auth/me — авторизованный.
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-
-export async function request(path, options = {}) {
-  // TODO: Использовать path/options по шагам выше. Пока намеренно не отправлять запрос и не имитировать успех.
-  throw new Error('HTTP-клиент — заготовка')
+// Единый HTTP-клиент: JSON, ошибки API и однократное обновление JWT.
+export const API_BASE_URL=import.meta.env.VITE_API_BASE_URL||'/api'
+let refreshing
+const tokens=()=>({accessToken:sessionStorage.getItem('accessToken'),refreshToken:sessionStorage.getItem('refreshToken')})
+export function clearHttpSession(){sessionStorage.removeItem('accessToken');sessionStorage.removeItem('refreshToken')}
+function error(status,data,message){const e=new Error(data?.error?.message||data?.message||message||'Ошибка запроса');e.status=status||null;e.code=data?.error?.code||'NETWORK_ERROR';e.details=data?.error?.details||{};return e}
+async function send(path,options={},retry=true){
+ const {method='GET',body,signal,auth=true}=options,headers=new Headers(options.headers||{}),t=tokens()
+ if(body!==undefined)headers.set('Content-Type','application/json')
+ if(auth&&t.accessToken)headers.set('Authorization','Bearer '+t.accessToken)
+ let response
+ try{response=await fetch(API_BASE_URL.replace(/\/$/,'')+'/'+path.replace(/^\//,''),{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal})}
+ catch(e){if(e.name==='AbortError')throw e;throw error(null,null,'Сервер недоступен')}
+ if(response.status===401&&auth&&retry&&!['auth/login','auth/register','auth/refresh','auth/logout'].includes(path.replace(/^\//,''))){
+  try{await refresh();return send(path,options,false)}catch(e){clearHttpSession();throw e}
+ }
+ if(response.status===204)return undefined
+ const raw=await response.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data={message:raw}}
+ if(!response.ok)throw error(response.status,data)
+ return data
 }
+async function refresh(){
+ if(!refreshing)refreshing=(async()=>{const rt=tokens().refreshToken;if(!rt)throw error(401,null,'Сессия завершена')
+ const r=await send('/auth/refresh',{method:'POST',body:{refreshToken:rt},auth:false},false)
+ if(!r?.accessToken||!r?.refreshToken)throw error(401,null,'Некорректный ответ refresh')
+ sessionStorage.setItem('accessToken',r.accessToken);sessionStorage.setItem('refreshToken',r.refreshToken)})().finally(()=>refreshing=null)
+ return refreshing
+}
+export const request=(path,options={})=>send(path,options)
