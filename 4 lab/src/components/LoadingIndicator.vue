@@ -1,5 +1,5 @@
+<!-- Назначение: доступный индикатор ожидания сетевой операции. -->
 <script setup>
-// Доступный индикатор ожидания сетевой операции.
-defineProps({active:Boolean})
+defineProps({ active: Boolean })
 </script>
 <template><p v-if="active" role="status" aria-live="polite">Загрузка…</p></template>

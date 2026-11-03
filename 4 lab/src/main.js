@@ -1,12 +1,16 @@
-// Назначение: собрать Vue-приложение; вход — #app из index.html, выход — смонтированный App.vue.
-// TODO: После реализации auth store определить порядок восстановления сессии до проверки маршрутов.
-// Не выполнять запросы студентов здесь: их запускает StudentsPage через stores/students.js.
-// API: восстановление через POST /api/auth/refresh и GET /api/auth/me; роли USER/ADMIN.
-// Проверка: npm run dev, переходы без перезагрузки; приложение запускается без backend.
+// Назначение: инициализация Vue, Pinia и сессии до первой маршрутизации.
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { useAuthStore } from './stores/auth'
 import './styles/main.css'
-
-createApp(App).use(createPinia()).use(router).mount('#app')
+async function start() {
+  const app = createApp(App), pinia = createPinia()
+  app.use(pinia)
+  await useAuthStore(pinia).restoreSession()
+  app.use(router)
+  await router.isReady()
+  app.mount('#app')
+}
+start()
