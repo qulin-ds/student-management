@@ -1,6 +1,6 @@
 <!-- Назначение: страница списка, фильтров, RxJS-поиска и серверной пагинации. -->
 <script setup>
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -97,16 +97,22 @@ function reset() {
 }
 
 async function remove(isu) {
-  if (!isAdmin.value || !window.confirm('Удалить студента?')) {
+  if (pending.value || searching.value || !isAdmin.value || !window.confirm('Удалить студента?')) {
     return
   }
 
   try {
-    await store.remove(isu, query.value)
+    if (await store.remove(isu)) {
+      const page = !items.value.length && pagination.value.page > 0
+        ? pagination.value.page - 1 : pagination.value.page
+      filters.page = page
+      setQuery({ ...query.value, page }, true)
+    }
   } catch {
   }
 }
 
+watch(() => filters.name, apply)
 onMounted(() => setQuery(buildFilters(0)))
 </script>
 
@@ -132,6 +138,7 @@ onMounted(() => setQuery(buildFilters(0)))
     <StudentsTable
       :students="items"
       :is-admin="isAdmin"
+      :pending="pending || searching"
       @remove="remove"
       @sort="changeSort"
     />

@@ -8,6 +8,7 @@ defineProps({
     default: () => [],
   },
   isAdmin: Boolean,
+  pending: Boolean,
 })
 
 defineEmits(['remove', 'sort'])
@@ -44,7 +45,7 @@ defineEmits(['remove', 'sort'])
             <template v-if="isAdmin">
               ·
               <RouterLink :to="`/students/${student.ISU}/edit`">Изменить</RouterLink>
-              <button @click="$emit('remove', student.ISU)">Удалить</button>
+              <button :disabled="pending" @click="$emit('remove', student.ISU)">Удалить</button>
             </template>
           </td>
         </tr>

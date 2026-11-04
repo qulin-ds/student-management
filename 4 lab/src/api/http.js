@@ -55,6 +55,9 @@ async function refreshSession() {
         throw createError(401, null, 'Некорректная пара токенов')
       }
 
+      if (tokenPair().refreshToken !== refreshToken) {
+        throw new DOMException('Сессия изменена', 'AbortError')
+      }
       setHttpSession(response)
     })().finally(() => {
       refreshing = null
@@ -112,10 +115,11 @@ async function send(path, options = {}, allowRefresh = true) {
     !signal?.aborted
   ) {
     try {
-      await refreshSession()
+      if (tokens.accessToken === tokenPair().accessToken) await refreshSession()
+      if (signal?.aborted) throw new DOMException('Запрос отменён', 'AbortError')
       return send(path, options, false)
     } catch (cause) {
-      if (cause.status === 401) {
+      if (cause.status === 401 && tokens.refreshToken === tokenPair().refreshToken) {
         clearHttpSession()
       }
       throw cause
@@ -132,10 +136,16 @@ async function send(path, options = {}, allowRefresh = true) {
   try {
     data = raw ? JSON.parse(raw) : null
   } catch {
-    data = { message: raw }
+    data = {
+      message: response.status >= 500
+        ? 'Сервер временно недоступен. Попробуйте позже.'
+        : 'Сервер вернул неожиданный ответ.',
+    }
   }
 
   if (!response.ok) {
+    if (response.status === 401 && auth && !authEndpoint &&
+        tokens.accessToken === tokenPair().accessToken) clearHttpSession()
     throw createError(response.status, data)
   }
 

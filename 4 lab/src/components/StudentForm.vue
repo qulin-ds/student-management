@@ -31,6 +31,7 @@ function fill(student = {}) {
 watch(() => props.initialStudent, fill, { immediate: true })
 
 function submit() {
+  if (props.pending) return
   const data = {
     ...form,
     ISU: Number(form.ISU),

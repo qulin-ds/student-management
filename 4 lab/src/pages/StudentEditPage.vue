@@ -1,6 +1,6 @@
 <script setup>
 // Загружает запись студента и сохраняет её изменения.
-import { onMounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudentsStore } from '../stores/students'
 import StudentForm from '../components/StudentForm.vue'
@@ -15,9 +15,13 @@ const props = defineProps({
 const router = useRouter()
 const store = useStudentsStore()
 
+let controller
+
 async function load() {
+  controller?.abort()
+  controller = new AbortController()
   try {
-    await store.loadOne(props.isu)
+    await store.loadOne(props.isu, controller.signal)
   } catch {
   }
 }
@@ -32,6 +36,7 @@ async function submit(data) {
 
 watch(() => props.isu, load)
 onMounted(load)
+onUnmounted(() => controller?.abort())
 </script>
 
 <template>

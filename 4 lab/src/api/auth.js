@@ -2,10 +2,18 @@
 import { request } from './http'
 
 export const login = (credentials) =>
-  request('/auth/login', { method: 'POST', body: credentials, auth: false })
+  request('/auth/login', { 
+    method: 'POST', 
+    body: credentials, 
+    auth: false 
+  })
 
 export const register = (data) =>
-  request('/auth/register', { method: 'POST', body: data, auth: false })
+  request('/auth/register', { 
+    method: 'POST', 
+    body: data, 
+    auth: false 
+  })
 
 export const refresh = (refreshToken) =>
   request('/auth/refresh', {

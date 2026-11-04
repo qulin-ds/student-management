@@ -39,8 +39,7 @@ async function remove() {
   }
 
   try {
-    await store.remove(props.isu)
-    await router.push('/students')
+    if (await store.remove(props.isu)) await router.push('/students')
   } catch {
   }
 }

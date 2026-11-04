@@ -21,7 +21,7 @@ export const useStudentsStore = defineStore('students', () => {
     try {
       const response = await api.listStudents(filters, signal)
 
-      if (id === listRequest) {
+      if (id === listRequest && !signal?.aborted) {
         items.value = response?.data || []
         pagination.value = {
           page: response?.page ?? 0,
@@ -53,7 +53,7 @@ export const useStudentsStore = defineStore('students', () => {
     try {
       const student = await api.getStudent(isu, signal)
 
-      if (id === cardRequest) {
+      if (id === cardRequest && !signal?.aborted) {
         selected.value = student
       }
 
@@ -99,20 +99,21 @@ export const useStudentsStore = defineStore('students', () => {
     }
   }
 
-  async function remove(isu, filters = {}) {
+  async function remove(isu) {
+    if (pending.value) return false
+    pending.value = true
     error.value = null
 
     try {
       await api.deleteStudent(isu)
-      const page =
-        items.value.length === 1 && pagination.value.page > 0
-          ? pagination.value.page - 1
-          : pagination.value.page
-
-      return await load({ ...filters, page, size: pagination.value.size })
+      items.value = items.value.filter((student) => student.ISU !== Number(isu))
+      if (selected.value?.ISU === Number(isu)) selected.value = null
+      return true
     } catch (cause) {
       error.value = cause
       throw cause
+    } finally {
+      pending.value = false
     }
   }
 

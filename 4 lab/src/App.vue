@@ -1,6 +1,6 @@
 <!-- Назначение: общий каркас приложения с навигацией по состоянию сессии. -->
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from './stores/auth'
@@ -9,6 +9,12 @@ const auth = useAuthStore()
 const router = useRouter()
 const { user, pending } = storeToRefs(auth)
 const isAdmin = computed(() => user.value?.role === 'ADMIN')
+
+watch(user, (current, previous) => {
+  if (!current && previous && router.currentRoute.value.meta.requiresAuth) {
+    router.replace({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } })
+  }
+})
 
 async function logout() {
   try {
