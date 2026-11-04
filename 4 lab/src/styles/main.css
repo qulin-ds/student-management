@@ -128,3 +128,22 @@ dd {
     margin-bottom: 0.5rem;
   }
 }
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-field input {
+  flex: none;
+  width: auto;
+  margin: 0;
+}
+
+.student-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}

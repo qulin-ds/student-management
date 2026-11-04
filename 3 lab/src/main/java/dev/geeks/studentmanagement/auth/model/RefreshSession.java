@@ -21,7 +21,8 @@ public class RefreshSession {
   @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
   private Instant expiresAt;
 
-  @Column(name = "revoked_at")
+  @Convert(converter = InstantTimestampConverter.class)
+  @Column(name = "revoked_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
   private Instant revokedAt;
 
   @Column(name = "revoked")

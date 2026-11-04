@@ -73,10 +73,14 @@ onUnmounted(() => controller?.abort())
       <dt>Заметка</dt>
       <dd>{{ selected.note }}</dd>
     </dl>
-    <RouterLink to="/students">К списку</RouterLink>
-    <template v-if="isAdmin && selected">
-      <RouterLink :to="`/students/${props.isu}/edit`">Изменить</RouterLink>
-      <button type="button" :disabled="pending" @click="remove">Удалить</button>
-    </template>
+    <div class="student-actions">
+      <RouterLink to="/students">К списку</RouterLink>
+      <template v-if="isAdmin && selected">
+        <RouterLink :to="`/students/${props.isu}/edit`">Изменить</RouterLink>
+        <button type="button" :disabled="pending" @click="remove">
+          Удалить
+        </button>
+      </template>
+    </div>
   </section>
 </template>

@@ -13,6 +13,8 @@ const emit = defineEmits(['submit', 'cancel'])
 const form = reactive({})
 
 function fill(student = {}) {
+  student = student ?? {} // строка заменяет null на пустой объект
+
   Object.assign(form, {
     ISU: student.ISU ?? '',
     name: student.name ?? '',
@@ -134,9 +136,9 @@ function submit() {
       {{ errors.checkinDate || errors.checkin_date || form.validation?.checkin_date }}
     </small>
 
-    <label>
-      <input v-model="form.is_foreign" type="checkbox" />
+    <label class="checkbox-field">
       Иностранец
+      <input v-model="form.is_foreign" type="checkbox" />
     </label>
 
     <label>
