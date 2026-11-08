@@ -1,26 +1,152 @@
+<!-- Назначение: страница списка, фильтров, RxJS-поиска и серверной пагинации. -->
 <script setup>
-// Назначение: координатор списка; вход — события поиска/фильтров/пагинации, выход — store actions и DOM.
-// TODO: storeToRefs(useStudentsStore()); onMounted начальный load, не вызывать запросы в шаблоне.
-// TODO: SearchInput v-model и StudentFilters props/emits → useStudentSearch; изменение условий page=0.
-// TODO: StudentPagination → PageResponse; sort=field,asc|desc; pending/error → индикаторы.
-// POST /api/user/students/search: USER/ADMIN, точные ISU/name/group/dormitory/room/is_foreign.
-// Нет q/фильтров date/note: не выдавать локальную фильтрацию одной страницы за глобальную.
-// TODO: remove(ISU) → подтверждение → students.remove → DELETE /api/admin/students/{isu}, только ADMIN.
-// TODO: onUnmounted отмена через composable; пустой результат показывать после успешной загрузки.
-// Проверка: пусто, фильтры+sort+page, отмена/успех удаления, 401/403/offline, уход во время запроса.
+import { computed, onMounted, reactive, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { useStudentsStore } from '../stores/students'
+import { useStudentSearch } from '../composables/useStudentSearch'
 import StudentsTable from '../components/StudentsTable.vue'
 import SearchInput from '../components/SearchInput.vue'
 import StudentFilters from '../components/StudentFilters.vue'
 import StudentPagination from '../components/StudentPagination.vue'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
 import ErrorMessage from '../components/ErrorMessage.vue'
+
+const store = useStudentsStore()
+const auth = useAuthStore()
+const { items, pagination, pending, error } = storeToRefs(store)
+
+const filters = reactive({
+  ISU: '',
+  name: '',
+  group: '',
+  dormitory: '',
+  room: '',
+  checkin_date: '',
+  is_foreign: null,
+  note: '',
+  sort: 'ISU,asc',
+  page: 0,
+  size: 20,
+})
+
+const {
+  query,
+  pending: searching,
+  error: searchError,
+  setQuery,
+} = useStudentSearch((params, signal) => store.load(params, signal))
+
+const isAdmin = computed(() => auth.user?.role === 'ADMIN')
+
+function buildFilters(page = 0) {
+  const result = {
+    ...filters,
+    name: filters.name.trim(),
+    note: filters.note.trim(),
+    page,
+  }
+
+  Object.keys(result).forEach((key) => {
+    if (result[key] === '' || result[key] === null || result[key] === undefined) {
+      delete result[key]
+    }
+  })
+
+  return result
+}
+
+function apply() {
+  filters.page = 0
+  setQuery(buildFilters(0))
+}
+
+function changePage(page) {
+  filters.page = page
+  setQuery({ ...query.value, page })
+}
+
+function changeSize(size) {
+  filters.size = size
+  filters.page = 0
+  setQuery(buildFilters(0))
+}
+
+function changeSort(field) {
+  const [current, direction] = filters.sort.split(',')
+  filters.sort = `${field},${current === field && direction === 'asc' ? 'desc' : 'asc'}`
+  apply()
+}
+
+function reset() {
+  Object.assign(filters, {
+    ISU: '',
+    name: '',
+    group: '',
+    dormitory: '',
+    room: '',
+    checkin_date: '',
+    is_foreign: null,
+    note: '',
+    sort: 'ISU,asc',
+    page: 0,
+    size: 20,
+  })
+  apply()
+}
+
+async function remove(isu) {
+  if (pending.value || searching.value || !isAdmin.value || !window.confirm('Удалить студента?')) {
+    return
+  }
+
+  try {
+    if (await store.remove(isu)) {
+      const page = !items.value.length && pagination.value.page > 0
+        ? pagination.value.page - 1 : pagination.value.page
+      filters.page = page
+      setQuery({ ...query.value, page }, true)
+    }
+  } catch {
+  }
+}
+
+watch(() => filters.name, apply)
+onMounted(() => setQuery(buildFilters(0)))
 </script>
 
 <template>
-  <section><h2>Студенты — заготовка</h2><RouterLink to="/students/new">Открыть заготовку создания</RouterLink>
-    <SearchInput /><StudentFilters /><LoadingIndicator :active="false" /><ErrorMessage :error="null" />
-    <StudentsTable /><StudentPagination />
-    <!-- TODO: Заменить пример ссылками реальных строк; 100000 не является загруженной записью. -->
-    <RouterLink to="/students/100000">Заготовка карточки (пример URL)</RouterLink></section>
+  <section>
+    <h2>Студенты</h2>
+    <RouterLink v-if="isAdmin" to="/students/new">Добавить студента</RouterLink>
+    <form @submit.prevent="apply">
+      <SearchInput v-model="filters.name" />
+      <StudentFilters
+        :filters="filters"
+        @update:filters="Object.assign(filters, $event)"
+        @apply="apply"
+        @reset="reset"
+      />
+      <button type="submit">Найти</button>
+    </form>
+    <LoadingIndicator :active="pending || searching" />
+    <ErrorMessage :error="searchError || error" />
+    <p v-if="!pending && !searching && !error && !items.length">
+      Студенты не найдены.
+    </p>
+    <StudentsTable
+      :students="items"
+      :is-admin="isAdmin"
+      :pending="pending || searching"
+      @remove="remove"
+      @sort="changeSort"
+    />
+    <StudentPagination
+      v-bind="pagination"
+      :pending="pending || searching"
+      @change="changePage"
+      @size-change="changeSize"
+    />
+  </section>
 </template>

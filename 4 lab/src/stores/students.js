@@ -1,7 +1,4 @@
-// Назначение: общий список/карточка и метаданные; вход — фильтры/ISU/StudentCreateRequest,
-// выход actions — Promise данных api/students.js. Роли USER/ADMIN читают, ADMIN меняет.
-// TODO: Подключить страницы через storeToRefs для сохранения реактивности; черновик формы хранить локально.
-// Проверка: переключение страниц, 404 карточки, отмена поиска, CRUD без устаревших данных и 403 USER.
+// Назначение: состояние списка, карточки, CRUD и серверной пагинации.
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as api from '../api/students'
@@ -9,32 +6,138 @@ import * as api from '../api/students'
 export const useStudentsStore = defineStore('students', () => {
   const items = ref([])
   const selected = ref(null)
-  // TODO: page с 0; копировать page/size/totalElements/totalPages из PageResponse, не вычислять из items.length.
-  const pagination = ref({ page: 0, size: 20, totalElements: 0, totalPages: 0 })
   const pending = ref(false)
   const error = ref(null)
+  const pagination = ref({ page: 0, size: 20, totalElements: 0, totalPages: 0 })
 
-  async function load(filters, signal) {
-    // TODO: api.listStudents(filters,signal) → items/pagination; pending/error через try/catch/finally.
-    // Защититься от позднего ответа старого запроса (номер запроса/отмена), включая сброс pending.
-    throw new Error('Загрузка списка — заготовка')
+  let listRequest = 0
+  let cardRequest = 0
+
+  async function load(filters = {}, signal) {
+    const id = ++listRequest
+    pending.value = true
+    error.value = null
+
+    try {
+      const response = await api.listStudents(filters, signal)
+
+      if (id === listRequest && !signal?.aborted) {
+        items.value = response?.data || []
+        pagination.value = {
+          page: response?.page ?? 0,
+          size: response?.size ?? filters.size ?? 20,
+          totalElements: response?.totalElements ?? 0,
+          totalPages: response?.totalPages ?? 0,
+        }
+      }
+
+      return response
+    } catch (cause) {
+      if (id === listRequest && cause.name !== 'AbortError') {
+        error.value = cause
+      }
+      throw cause
+    } finally {
+      if (id === listRequest) {
+        pending.value = false
+      }
+    }
   }
-  async function loadOne(isu) {
-    // TODO: Очистить старую selected, api.getStudent(isu) → selected; не показывать прошлую запись при 404.
-    throw new Error('Загрузка карточки — заготовка')
+
+  async function loadOne(isu, signal) {
+    const id = ++cardRequest
+    selected.value = null
+    pending.value = true
+    error.value = null
+
+    try {
+      const student = await api.getStudent(isu, signal)
+
+      if (id === cardRequest && !signal?.aborted) {
+        selected.value = student
+      }
+
+      return student
+    } catch (cause) {
+      if (id === cardRequest && cause.name !== 'AbortError') {
+        error.value = cause
+      }
+      throw cause
+    } finally {
+      if (id === cardRequest) {
+        pending.value = false
+      }
+    }
   }
+
   async function create(student) {
-    // TODO: api.createStudent(student) → новая запись; обновить список только после успеха.
-    throw new Error('Создание — заготовка')
+    pending.value = true
+    error.value = null
+
+    try {
+      return await api.createStudent(student)
+    } catch (cause) {
+      error.value = cause
+      throw cause
+    } finally {
+      pending.value = false
+    }
   }
+
   async function update(isu, student) {
-    // TODO: api.updateStudent(isu,student) → selected; перезагрузить текущую страницу списка.
-    throw new Error('Редактирование — заготовка')
+    pending.value = true
+    error.value = null
+
+    try {
+      selected.value = await api.updateStudent(isu, student)
+      return selected.value
+    } catch (cause) {
+      error.value = cause
+      throw cause
+    } finally {
+      pending.value = false
+    }
   }
+
   async function remove(isu) {
-    // TODO: После подтверждения в странице вызвать api.deleteStudent(isu); перезагрузить список.
-    // Если удалили последнюю строку последней страницы, уменьшить page; 403/404 не скрывать.
-    throw new Error('Удаление — заготовка')
+    if (pending.value) return false
+    pending.value = true
+    error.value = null
+
+    try {
+      await api.deleteStudent(isu)
+      items.value = items.value.filter((student) => student.ISU !== Number(isu))
+      if (selected.value?.ISU === Number(isu)) selected.value = null
+      return true
+    } catch (cause) {
+      error.value = cause
+      throw cause
+    } finally {
+      pending.value = false
+    }
   }
-  return { items, selected, pagination, pending, error, load, loadOne, create, update, remove }
+
+  function clear() {
+    listRequest += 1
+    cardRequest += 1
+    items.value = []
+    selected.value = null
+    pending.value = false
+    error.value = null
+    pagination.value = { page: 0, size: 20, totalElements: 0, totalPages: 0 }
+  }
+
+  return {
+    items,
+    selected,
+    pending,
+    error,
+    pagination,
+    load,
+    loadOne,
+    create,
+    update,
+    remove,
+    clear,
+  }
 })

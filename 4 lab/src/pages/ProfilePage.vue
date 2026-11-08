@@ -1,16 +1,37 @@
+<!-- Назначение: отображение профиля и завершение текущей сессии. -->
 <script setup>
-// Назначение: профиль; вход — сессия auth store, выход — username/role и будущий logout.
-// TODO: onMounted получить GET /api/auth/me через stores/auth.js, показать pending/ErrorMessage.
-// Ответ только {username,role}, USER/ADMIN; email и endpoint изменения профиля/пароля отсутствуют.
-// TODO: Выход auth.logout → POST /api/auth/logout {refreshToken}, затем /login; блокировать повтор.
-// Очистить локальную сессию даже при сетевой ошибке, сообщить, что серверный отзыв мог не состояться.
-// Проверка: обе роли, 401/refresh, offline, выход и повторный вход.
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '../stores/auth'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
 import ErrorMessage from '../components/ErrorMessage.vue'
+
+const auth = useAuthStore()
+const router = useRouter()
+const { user, pending, error } = storeToRefs(auth)
+
+async function logout() {
+  try {
+    await auth.logout()
+    await router.replace('/login')
+  } catch {
+    await router.replace({ path: '/login', query: { reason: 'logout-network' } })
+  }
+}
 </script>
 
 <template>
-  <section><h2>Профиль — заготовка</h2><p>Имя и роль ещё не запрашивались.</p>
-    <LoadingIndicator :active="false" /><ErrorMessage :error="null" />
-    <button disabled type="button">Выйти — заготовка</button></section>
+  <section>
+    <h2>Профиль</h2>
+    <LoadingIndicator :active="pending" />
+    <ErrorMessage :error="error" />
+    <dl v-if="user">
+      <dt>Имя пользователя</dt>
+      <dd>{{ user.username }}</dd>
+      <dt>Роль</dt>
+      <dd>{{ user.role }}</dd>
+    </dl>
+    <p>Email и редактирование профиля не предоставляются текущим API.</p>
+    <button type="button" :disabled="pending" @click="logout">Выйти</button>
+  </section>
 </template>

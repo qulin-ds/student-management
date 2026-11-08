@@ -1,26 +1,48 @@
+<!-- Назначение: общий каркас приложения с навигацией по состоянию сессии. -->
 <script setup>
-// Назначение: общий каркас; вход — текущий маршрут, выход — навигация и RouterView.
-// TODO: Подключить stores/auth.js; показывать username из GET /api/auth/me.
-// TODO: Для USER оставить просмотр, для ADMIN добавить управление; пока все ссылки открывают заготовки.
-// TODO: Добавить выход через auth.logout, pending и ErrorMessage; POST /api/auth/logout получает refreshToken.
-// Проверка: открыть каждый пункт меню; после реализации проверить меню обеих ролей и выход.
-import { RouterLink, RouterView } from 'vue-router'
+import { computed, watch } from 'vue'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from './stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+const { user, pending } = storeToRefs(auth)
+const isAdmin = computed(() => user.value?.role === 'ADMIN')
+
+watch(user, (current, previous) => {
+  if (!current && previous && router.currentRoute.value.meta.requiresAuth) {
+    router.replace({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } })
+  }
+})
+
+async function logout() {
+  try {
+    await auth.logout()
+  } catch {
+  } finally {
+    router.push('/login')
+  }
+}
 </script>
 
 <template>
   <header>
-    <h1>Управление студентами · Vue</h1>
+    <h1>Управление студентами</h1>
     <nav aria-label="Основная навигация">
-      <RouterLink to="/students">Студенты</RouterLink>
-      <RouterLink to="/students/new">Создание</RouterLink>
-      <RouterLink to="/login">Вход</RouterLink>
-      <RouterLink to="/register">Регистрация</RouterLink>
-      <RouterLink to="/profile">Профиль</RouterLink>
+      <template v-if="user">
+        <RouterLink to="/students">Студенты</RouterLink>
+        <RouterLink v-if="isAdmin" to="/students/new">Создание</RouterLink>
+        <RouterLink to="/profile">Профиль ({{ user.username }})</RouterLink>
+        <button type="button" :disabled="pending" @click="logout">Выйти</button>
+      </template>
+      <template v-else>
+        <RouterLink to="/login">Вход</RouterLink>
+        <RouterLink to="/register">Регистрация</RouterLink>
+      </template>
     </nav>
   </header>
   <main>
-    <p class="notice">Учебный каркас: работают только переходы. Данные не загружаются, операции отключены.</p>
-    <!-- TODO: После подключения guards отображать отказ в доступе отдельно от неизвестного маршрута. -->
     <RouterView />
   </main>
 </template>

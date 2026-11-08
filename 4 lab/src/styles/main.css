@@ -1,22 +1,149 @@
-/* Назначение: базовый адаптивный вид App.vue и компонентов; вход HTML/classes, выход оформление.
- TODO: Добавить pending/error/invalid рядом с селекторами; сообщения связать с ErrorMessage/StudentForm.
- API и роли не обрабатывает, стили не заменяют запрет USER на /api/admin/students.
- Проверка: клавиатура, узкий экран, длинные name/note, сообщения 403/422, ошибка видна не только цветом. */
-* { box-sizing: border-box; }
-body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #172b44; background: #f4f6fa; }
-header, main { max-width: 1100px; margin: auto; padding: 1.25rem; }
-nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-a { color: #185c9e; }
-:focus-visible { outline: 3px solid #ce8200; outline-offset: 3px; }
-section, fieldset { margin: 1rem 0; padding: 1rem; border: 1px solid #b8c6d6; border-radius: .5rem; background: white; }
-.notice { padding: 1rem; background: #fff1c9; }
-label { display: block; margin: .7rem 0; }
-input, select, textarea, button { font: inherit; padding: .45rem; max-width: 100%; }
-input:not([type=checkbox]), textarea { display: block; width: min(100%, 30rem); }
-button { margin: .4rem; }
-button:disabled { cursor: not-allowed; opacity: .65; }
-.table-scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { padding: .7rem; text-align: left; border: 1px solid #b8c6d6; overflow-wrap: anywhere; }
-/* TODO: Оформить aria-invalid поля при подключении errors из 422 details. */
-[role=alert] { color: #a01922; }
+/* Адаптивное оформление страниц, форм, таблиц и состояний интерфейса. */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font: 16px/1.5 system-ui, sans-serif;
+  color: #29364d;
+  background: #f4f6fb;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+header,
+main {
+  max-width: 1180px;
+  margin: auto;
+  padding: 1.2rem;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+a {
+  color: #5549a4;
+}
+
+button,
+input,
+select,
+textarea {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd1e2;
+  border-radius: 0.4rem;
+  font: inherit;
+}
+
+button {
+  margin: 0.2rem;
+  background: #eeecff;
+  color: #393273;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+:focus-visible {
+  outline: 3px solid #8980dc;
+  outline-offset: 2px;
+}
+
+section,
+fieldset {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #dce1ed;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.5rem 0;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+td,
+th {
+  padding: 0.6rem;
+  border-bottom: 1px solid #e1e5ef;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+th button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+}
+
+[role="alert"] {
+  color: #a32945;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 0.5rem;
+}
+
+dd {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  dl {
+    grid-template-columns: 1fr;
+  }
+
+  dd {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-field input {
+  flex: none;
+  width: auto;
+  margin: 0;
+}
+
+.student-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}

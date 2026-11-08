@@ -1,20 +1,76 @@
+<!-- Назначение: форма входа и переход на запрошенную внутреннюю страницу. -->
 <script setup>
-// Назначение: Вход; вход — локальные username,password, выход — auth.login и переход.
-// TODO: Создать reactive/ref черновик и ошибки, stores/auth.js подключить через storeToRefs.
-// TODO: Валидировать перед submit: username принимает email; непустые поля обязательны, неверная пара → 401.
-// POST /api/auth/login → {accessToken,refreshToken}; затем GET /api/auth/me → {username,role}.
-// TODO: handleSubmit вызывает store; только после успеха перейти /students; ошибки передать ErrorMessage.
-// TODO: pending исключает повторную отправку, finally снимает блокировку; пароль не хранить в store.
-// Проверка: неправильные поля, 401/409/422/offline, двойной submit, успешный переход.
+import { reactive } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '../stores/auth'
 import ErrorMessage from '../components/ErrorMessage.vue'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
-// TODO: Добавить handleSubmit рядом с черновиком; до подключения форма отключена.
+
+const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const { pending, error } = storeToRefs(auth)
+const form = reactive({ username: '', password: '' })
+
+function destination() {
+  const target =
+    typeof route.query.redirect === 'string' ? route.query.redirect : '/students'
+
+  return target.startsWith('/') &&
+    !target.startsWith('//') &&
+    !target.startsWith('/login') &&
+    !target.startsWith('/register')
+    ? target
+    : '/students'
+}
+
+async function submit() {
+  if (pending.value || !form.username.trim() || !form.password) {
+    return
+  }
+
+  try {
+    await auth.login({
+      username: form.username.trim(),
+      password: form.password,
+    })
+    await router.replace(destination())
+  } catch {
+  }
+}
 </script>
 
 <template>
-  <section><h2>Вход — заготовка</h2><form @submit.prevent><fieldset disabled>
-    <label>username <input type="text"></label>
-    <label>password <input type="password"></label>
-    <button disabled type="submit">Вход — заготовка</button>
-  </fieldset></form><LoadingIndicator :active="false" /><ErrorMessage :error="null" /></section>
+  <section>
+    <h2>Вход</h2>
+    <form @submit.prevent="submit">
+      <label>
+        Имя пользователя или email
+        <input
+          v-model.trim="form.username"
+          autocomplete="username"
+          required
+        />
+      </label>
+      <label>
+        Пароль
+        <input
+          v-model="form.password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </label>
+      <button
+        type="submit"
+        :disabled="pending || !form.username.trim() || !form.password"
+      >
+        Войти
+      </button>
+    </form>
+    <LoadingIndicator :active="pending" />
+    <ErrorMessage :error="error" />
+    <p>Нет аккаунта? <RouterLink to="/register">Зарегистрироваться</RouterLink></p>
+  </section>
 </template>

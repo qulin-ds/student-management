@@ -1,26 +1,60 @@
-// Назначение: будущая RxJS-цепочка для StudentsPage, SearchInput и stores/students.js.
-// Вход: searchFn(filters,signal) и изменения строки/фильтров; выход: состояние и функция ввода.
-// TODO: 1. Создать Subject входных значений (Observable — поток, Subject позволяет next из события Vue).
-// TODO: 2. pipe: нормализация строки → debounceTime(300) → distinctUntilChanged() → switchMap.
-// Для объекта фильтров передать компаратор значений, стандартное сравнение ссылок недостаточно.
-// TODO: 3. Строку связать с name (ТОЧНОЕ совпадение) POST /api/user/students/search, роли USER/ADMIN.
-// Параметра q/полнотекстового поиска нет; не обещать поиск подстроки. Передавать остальные фильтры,
-// sort и page=0 при изменении условий; изменения страницы не должны самопроизвольно сбрасываться.
-// TODO: 4. В switchMap создавать Observable с AbortController: выполнить searchFn и next/complete;
-// teardown должен вызвать abort. from(Promise) сам по себе HTTP не отменяет.
-// TODO: 5. catchError ВНУТРИ switchMap: передать ошибку в состояние, вернуть EMPTY/значение,
-// чтобы один 422/сетевой сбой не завершил поток навсегда. Не показывать AbortError.
-// TODO: 6. Подписаться при setup/onMounted; в onUnmounted unsubscribe и subject.complete.
-// Согласовать владельца pending/error с store; finalize старого запроса не должен сбрасывать новый.
-// TODO: Проверка: быстрый ввод даёт один запрос, повтор значения не запрашивает, старый ответ не
-// заменяет новый, после ошибки поиск жив, после ухода со страницы нет запросов/утечки подписок.
-// Импорты ниже обозначают будущие инструменты; пока нет Subject, подписок и сетевой активности.
-import { Observable, Subject, EMPTY } from 'rxjs'
-import { debounceTime, distinctUntilChanged, switchMap, catchError, finalize } from 'rxjs/operators'
+// Назначение: RxJS-поиск с debounce, отменой fetch и восстановлением потока после ошибок.
+import { EMPTY, Observable, Subject, timer } from 'rxjs'
+import { catchError, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators'
 import { onUnmounted, ref } from 'vue'
 
 export function useStudentSearch(searchFn) {
-  // TODO: Создать поток и реактивные результаты; вернуть {query, pending, error, setQuery, ...}.
-  // Пока возвращается явный статус заготовки, чтобы вызывающая страница не изображала поиск.
-  return { implemented: false }
+  const query = ref({})
+  const pending = ref(false)
+  const error = ref(null)
+  const changes = new Subject()
+
+  const subscription = changes
+    .pipe(
+      distinctUntilChanged((a, b) => !error.value &&
+        a.revision === b.revision && JSON.stringify(a.filters) === JSON.stringify(b.filters)),
+      // Новое значение сразу отменяет HTTP; задержка относится к следующему запросу.
+      switchMap(({ filters }) => {
+        pending.value = true
+        error.value = null
+        return timer(300).pipe(
+          switchMap(() => new Observable((observer) => {
+            const controller = new AbortController()
+            Promise.resolve().then(() => searchFn(filters, controller.signal))
+              .then((result) => {
+                observer.next(result)
+                observer.complete()
+              })
+              .catch((cause) => {
+                if (cause.name === 'AbortError') observer.complete()
+                else observer.error(cause)
+              })
+
+            return () => controller.abort()
+          })),
+          catchError((cause) => {
+            error.value = cause
+            return EMPTY
+          }),
+          finalize(() => {
+            pending.value = false
+          }),
+        )
+      }),
+    )
+    .subscribe()
+
+  let revision = 0
+  function setQuery(filters, force = false) {
+    if (force) revision += 1
+    query.value = { ...filters }
+    changes.next({ filters: query.value, revision })
+  }
+
+  onUnmounted(() => {
+    subscription.unsubscribe()
+    changes.complete()
+  })
+
+  return { query, pending, error, setQuery }
 }

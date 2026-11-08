@@ -1,12 +1,8 @@
 # Назначение: изолированный учебный стенд frontend + оригинальный 3 lab + новый PostgreSQL.
 # Вход .env, Dockerfile/Dockerfile.backend; выход http://localhost:8084 (или FRONTEND_PORT).
-# TODO: До первого запуска задать DB_PASSWORD, при необходимости ADMIN_*; не использовать общую БД.
 # Backend: DB_DDL_GENERATION=create-or-extend-tables только для этой новой учебной базы.
 # JWT-ключи генерирует backend в /app/data; volume сохраняет их между рестартами.
 # API auth открыто, /user/students USER/ADMIN, /admin/students ADMIN; браузер обращается через Nginx.
-# TODO: После реализации проверить USER/ADMIN, refresh/logout, offline и сохранность данных после restart.
-# depends_on backend означает порядок старта, не готовность HTTP; при старте дождаться логов backend.
-# TODO: Если понадобится автоматическая готовность, добавить реальную healthcheck; /actuator/health отсутствует.
 # Проверка: docker compose config, up --build; /api/auth/me -> 401; прямой SPA URL -> 200.
 services:
   frontend:
@@ -16,7 +12,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-8084}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   backend:
     build:
@@ -30,6 +27,12 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "4", "http://localhost:8080/v3/api-docs"]
+      interval: 5s
+      timeout: 5s
+      start_period: 40s
+      retries: 24
     volumes:
       - jwt-keys:/app/data
     depends_on:

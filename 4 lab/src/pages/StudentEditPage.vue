@@ -1,17 +1,56 @@
 <script setup>
-// Назначение: редактирование; вход isu из router, выход — сохранение и переход.
-// TODO: Подключить stores/students.js и auth.js; доступ ADMIN после реализации guards.
-// TODO: watch isu immediate → GET /api/user/students/{isu}; selected передать initialStudent. 404 не открывает пустую форму.
-// TODO: @submit(body) → students.update(isu,body) → PUT /api/admin/students/{isu}.
-// Тело ISU,name,group,dormitory,room,checkin_date,is_foreign,note → ответ {data:StudentDto}.
-// ISU неизменяем; PATCH альтернатива без ISU, null означает пропуск поля.
-// TODO: После успеха /students/{ISU}; pending/error.details → StudentForm, общая ошибка → ErrorMessage.
-// TODO: @cancel → /students без запроса; не допускать повторный submit.
-// Проверка: валидное тело, 403 USER, 409/422 с сохранением ввода, offline, успешный переход.
+// Загружает запись студента и сохраняет её изменения.
+import { onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStudentsStore } from '../stores/students'
 import StudentForm from '../components/StudentForm.vue'
-defineProps({ isu: { type: String, required: true } })
+
+const props = defineProps({
+  isu: {
+    type: String,
+    required: true,
+  },
+})
+
+const router = useRouter()
+const store = useStudentsStore()
+
+let controller
+
+async function load() {
+  controller?.abort()
+  controller = new AbortController()
+  try {
+    await store.loadOne(props.isu, controller.signal)
+  } catch {
+  }
+}
+
+async function submit(data) {
+  try {
+    const student = await store.update(props.isu, data)
+    router.push('/students/' + student.ISU)
+  } catch {
+  }
+}
+
+watch(() => props.isu, load)
+onMounted(load)
+onUnmounted(() => controller?.abort())
 </script>
 
 <template>
-  <section><h2>Редактирование — заготовка</h2><StudentForm mode="edit" /></section>
+  <section>
+    <h2>Редактирование</h2>
+    <p v-if="store.error" role="alert">{{ store.error.message }}</p>
+    <StudentForm
+      v-if="store.selected"
+      mode="edit"
+      :initial-student="store.selected"
+      :pending="store.pending"
+      :errors="store.error?.details"
+      @submit="submit"
+      @cancel="router.push('/students/' + props.isu)"
+    />
+  </section>
 </template>

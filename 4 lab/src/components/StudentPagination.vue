@@ -1,14 +1,42 @@
 <script setup>
-// Назначение: страницы; будущие props page,size,totalPages,totalElements,pending,
-// выход — emits change(page), size-change(size), обрабатываются StudentsPage.
-// TODO: Объявить props/emits, UI page+1, API page с 0, size 1..100; не вычислять totals из длины массива.
-// TODO: На границах/pending отключать кнопки; для totalPages=0 не показывать «1 из 0».
-// API GET /api/user/students для USER/ADMIN, ответ PageResponse.
-// Проверка: пусто/одна/последняя страница; size сбрасывает page; вне границ события не отправляются.
-// TODO: Добавить defineProps/defineEmits по контракту выше.
+// Серверная пагинация: API использует нумерацию страниц с нуля.
+defineProps({
+  page: { type: Number, default: 0 },
+  size: { type: Number, default: 20 },
+  totalPages: { type: Number, default: 0 },
+  totalElements: { type: Number, default: 0 },
+  pending: Boolean,
+})
+
+defineEmits(['change', 'size-change'])
 </script>
 
 <template>
-  <nav aria-label="Пагинация"><button disabled>Назад — заготовка</button>
-    <span>Пагинация не подключена</span><button disabled>Далее — заготовка</button></nav>
+  <nav v-if="totalPages > 0" aria-label="Пагинация">
+    <button :disabled="pending || page <= 0" @click="$emit('change', page - 1)">
+      Назад
+    </button>
+    <span>
+      Страница {{ page + 1 }} из {{ totalPages }} · {{ totalElements }} записей
+    </span>
+    <button
+      :disabled="pending || page + 1 >= totalPages"
+      @click="$emit('change', page + 1)"
+    >
+      Далее
+    </button>
+    <label>
+      Размер
+      <select
+        :value="size"
+        :disabled="pending"
+        @change="$emit('size-change', Number($event.target.value))"
+      >
+        <option v-for="n in [10, 20, 50, 100]" :key="n" :value="n">
+          {{ n }}
+        </option>
+      </select>
+    </label>
+  </nav>
+  <p v-else>Записей: {{ totalElements }}</p>
 </template>

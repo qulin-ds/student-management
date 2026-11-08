@@ -1,22 +1,155 @@
-// Назначение: единственная транспортная граница для api/auth.js и api/students.js.
-// Вход: path относительно /api и options (method/body/signal/auth); выход: Promise разобранного JSON,
-// undefined для 204; при ошибке — исключение с status/code/message/details.
-// TODO: 1. Собрать URL из API_BASE_URL; сериализовать body и Content-Type только при наличии тела.
-// TODO: 2. Выполнить fetch с AbortSignal; проверить response.ok, отдельно обработать пустой 204.
-// TODO: 3. Прочитать {error:{code,message,status,timestamp,details}} из GlobalExceptionHandler.
-// Различать 400 формат, 401 сессия, 403 права, 404 запись, 409 конфликт, 422 поля, 500 сервер;
-// сетевой сбой без HTTP-статуса показать как недоступность сервера, AbortError не как ошибку пользователю.
-// TODO: 4. Добавлять Authorization: Bearer <accessToken> только в защищённые запросы.
-// TODO: 5. На 401 защищённого запроса выполнить ОДИН общий POST /auth/refresh {refreshToken}:
-// параллельные запросы ждут один Promise; сохранить ОБА новых токена (backend отзывает старый refresh).
-// Повторить исходный запрос только один раз. Не обновлять на 403 и на login/register/refresh/logout.
-// При неудаче refresh очистить сессию через stores/auth.js; избежать циклических импортов,
-// например передать callbacks получения/обновления токенов из store при инициализации.
-// TODO: Проверить JSON/204, offline, 401 одновременно у двух запросов, 403 без refresh, отмену.
-// Роли: /user/students — USER/ADMIN, /admin/students — ADMIN, /auth/me — авторизованный.
+// Назначение: единый HTTP-клиент, обработка ошибок и обновление JWT.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
-export async function request(path, options = {}) {
-  // TODO: Использовать path/options по шагам выше. Пока намеренно не отправлять запрос и не имитировать успех.
-  throw new Error('HTTP-клиент — заготовка')
+let refreshing = null
+let sessionListener = null
+
+const tokenPair = () => ({
+  accessToken: sessionStorage.getItem('accessToken'),
+  refreshToken: sessionStorage.getItem('refreshToken'),
+})
+
+export function setHttpSessionListener(listener) {
+  sessionListener = listener
+  listener?.(tokenPair())
 }
+
+export function setHttpSession(pair) {
+  sessionStorage.setItem('accessToken', pair.accessToken)
+  sessionStorage.setItem('refreshToken', pair.refreshToken)
+  sessionListener?.(tokenPair())
+}
+
+export function clearHttpSession() {
+  sessionStorage.removeItem('accessToken')
+  sessionStorage.removeItem('refreshToken')
+  sessionListener?.({ accessToken: null, refreshToken: null })
+}
+
+function createError(status, data, fallback) {
+  const result = new Error(
+    data?.error?.message || data?.message || fallback || 'Ошибка запроса',
+  )
+  result.status = status || null
+  result.code = data?.error?.code || 'REQUEST_ERROR'
+  result.details = data?.error?.details || data?.details || {}
+  return result
+}
+
+async function refreshSession() {
+  if (!refreshing) {
+    refreshing = (async () => {
+      const refreshToken = tokenPair().refreshToken
+
+      if (!refreshToken) {
+        throw createError(401, null, 'Сессия завершена')
+      }
+
+      const response = await send(
+        '/auth/refresh',
+        { method: 'POST', body: { refreshToken }, auth: false },
+        false,
+      )
+
+      if (!response?.accessToken || !response?.refreshToken) {
+        throw createError(401, null, 'Некорректная пара токенов')
+      }
+
+      if (tokenPair().refreshToken !== refreshToken) {
+        throw new DOMException('Сессия изменена', 'AbortError')
+      }
+      setHttpSession(response)
+    })().finally(() => {
+      refreshing = null
+    })
+  }
+
+  return refreshing
+}
+
+async function send(path, options = {}, allowRefresh = true) {
+  const { method = 'GET', body, signal, auth = true } = options
+  const normalizedPath = path.replace(/^\//, '')
+  const headers = new Headers(options.headers || {})
+  const tokens = tokenPair()
+
+  if (body !== undefined) {
+    headers.set('Content-Type', 'application/json')
+  }
+
+  if (auth && tokens.accessToken) {
+    headers.set('Authorization', `Bearer ${tokens.accessToken}`)
+  }
+
+  let response
+
+  try {
+    response = await fetch(
+      `${API_BASE_URL.replace(/\/$/, '')}/${normalizedPath}`,
+      {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal,
+      },
+    )
+  } catch (cause) {
+    if (cause.name === 'AbortError') {
+      throw cause
+    }
+    throw createError(null, null, 'Сервер недоступен')
+  }
+
+  const authEndpoint = [
+    'auth/login',
+    'auth/register',
+    'auth/refresh',
+    'auth/logout',
+  ].includes(normalizedPath)
+
+  if (
+    response.status === 401 &&
+    auth &&
+    allowRefresh &&
+    !authEndpoint &&
+    !signal?.aborted
+  ) {
+    try {
+      if (tokens.accessToken === tokenPair().accessToken) await refreshSession()
+      if (signal?.aborted) throw new DOMException('Запрос отменён', 'AbortError')
+      return send(path, options, false)
+    } catch (cause) {
+      if (cause.status === 401 && tokens.refreshToken === tokenPair().refreshToken) {
+        clearHttpSession()
+      }
+      throw cause
+    }
+  }
+
+  if (response.status === 204) {
+    return undefined
+  }
+
+  const raw = await response.text()
+  let data = null
+
+  try {
+    data = raw ? JSON.parse(raw) : null
+  } catch {
+    data = {
+      message: response.status >= 500
+        ? 'Сервер временно недоступен. Попробуйте позже.'
+        : 'Сервер вернул неожиданный ответ.',
+    }
+  }
+
+  if (!response.ok) {
+    if (response.status === 401 && auth && !authEndpoint &&
+        tokens.accessToken === tokenPair().accessToken) clearHttpSession()
+    throw createError(response.status, data)
+  }
+
+  return data
+}
+
+export const request = (path, options = {}) => send(path, options)
