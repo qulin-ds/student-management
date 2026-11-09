@@ -1,0 +1,19 @@
+# В образ попадают исходники и lockfile, но не секреты, кеши и результаты локальной сборки.
+node_modules
+.nuxt
+.output
+.data
+.git
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.dump
+*.backup
+data
+dumps
+coverage
+*.log
