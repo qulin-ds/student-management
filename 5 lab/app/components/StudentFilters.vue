@@ -1,23 +1,20 @@
 <!-- Назначение: фильтры полей студента и сортировка через v-model:filters. -->
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  filters: {
-    type: Object,
-    default: () => ({}),
-  },
-})
-
-const emit = defineEmits(['update:filters', 'apply', 'reset'])
+// Черновик фильтров приходит от страницы; компонент не мутирует props и не делает HTTP.
+// Проверка: is_foreign=false сохраняется, применение/сброс передаются родителю.
+const props = defineProps<{ filters: Record<string, unknown> }>()
+const emit = defineEmits<{ 'update:filters': [value: Record<string, unknown>]; apply: []; reset: [] }>()
 const model = computed({
   get: () => props.filters,
   set: (value) => emit('update:filters', value),
 })
 
-function set(key, value) {
+function set(key: string, value: unknown) {
   model.value = { ...model.value, [key]: value }
 }
+function inputValue(event: Event) { return (event.target as HTMLInputElement | HTMLSelectElement).value }
 </script>
 
 <template>
@@ -29,19 +26,19 @@ function set(key, value) {
         <input
           type="number"
           :value="filters.ISU"
-          @input="set('ISU', $event.target.value === '' ? '' : Number($event.target.value))"
+          @input="set('ISU', inputValue($event) === '' ? '' : Number(inputValue($event)))"
         />
       </label>
       <label>
         Группа
-        <input :value="filters.group" @input="set('group', $event.target.value)" />
+        <input :value="filters.group" @input="set('group', inputValue($event))" />
       </label>
       <label>
         Общежитие
         <input
           type="number"
           :value="filters.dormitory"
-          @input="set('dormitory', $event.target.value === '' ? '' : Number($event.target.value))"
+          @input="set('dormitory', inputValue($event) === '' ? '' : Number(inputValue($event)))"
         />
       </label>
       <label>
@@ -49,7 +46,7 @@ function set(key, value) {
         <input
           type="number"
           :value="filters.room"
-          @input="set('room', $event.target.value === '' ? '' : Number($event.target.value))"
+          @input="set('room', inputValue($event) === '' ? '' : Number(inputValue($event)))"
         />
       </label>
       <label>
@@ -57,7 +54,7 @@ function set(key, value) {
         <input
           type="date"
           :value="filters.checkin_date"
-          @input="set('checkin_date', $event.target.value)"
+          @input="set('checkin_date', inputValue($event))"
         />
       </label>
       <label>
@@ -67,7 +64,7 @@ function set(key, value) {
           @change="
             set(
               'is_foreign',
-              $event.target.value === '' ? null : $event.target.value === 'true',
+              inputValue($event) === '' ? null : inputValue($event) === 'true',
             )
           "
         >
@@ -78,11 +75,11 @@ function set(key, value) {
       </label>
       <label>
         Заметка
-        <input :value="filters.note" @input="set('note', $event.target.value)" />
+        <input :value="filters.note" @input="set('note', inputValue($event))" />
       </label>
       <label>
         Сортировка
-        <select :value="filters.sort" @change="set('sort', $event.target.value)">
+        <select :value="filters.sort" @change="set('sort', inputValue($event))">
           <option
             v-for="field in ['ISU', 'name', 'group', 'dormitory', 'room', 'checkinDate', 'isForeign', 'note']"
             :key="field"

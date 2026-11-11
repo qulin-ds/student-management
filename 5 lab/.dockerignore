@@ -1,34 +1,19 @@
-# Исключаем зависимости, локальные сборки и служебные каталоги.
+# В образ попадают исходники и lockfile, но не секреты, кеши и результаты локальной сборки.
 node_modules
 .nuxt
 .output
 .data
 .git
-.github
-.vscode
-.idea
-coverage
-test-results
-playwright-report
-
-# Не передаём локальные переменные окружения и секреты.
 .env
 .env.*
 !.env.example
-.npmrc
 *.key
 *.pem
 *.p12
 *.pfx
-*.crt
-
-# Не включаем локальные данные, резервные копии и журналы.
-data
-dumps
 *.dump
 *.backup
-*.sqlite
-*.db
+data
+dumps
+coverage
 *.log
-npm-debug.log*
-.DS_Store

@@ -1,13 +1,10 @@
-<script setup>
+<script setup lang="ts">
 // Контролируемое поле поиска по точному ФИО.
-defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-})
-
-defineEmits(['update:modelValue'])
+// Только ввод: значение приходит от страницы, новое значение уходит через v-model.
+// Проверка: ввод обновляет фильтр name; задержкой и отменой HTTP управляет страница.
+withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: '' })
+const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+function input(event: Event) { emit('update:modelValue', (event.target as HTMLInputElement).value) }
 </script>
 
 <template>
@@ -17,7 +14,7 @@ defineEmits(['update:modelValue'])
       type="search"
       :value="modelValue"
       placeholder="Точное совпадение"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="input"
     />
   </label>
 </template>

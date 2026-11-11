@@ -81,7 +81,9 @@ function isValidCheckinDate(value: string): boolean {
     return false
   }
 
-  const [year, month, day] = value.split('-').map(Number)
+  const year = Number(value.slice(0, 4))
+  const month = Number(value.slice(5, 7))
+  const day = Number(value.slice(8, 10))
   const date = new Date(Date.UTC(year, month - 1, day))
   const isRealDate =
     date.getUTCFullYear() === year &&

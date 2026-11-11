@@ -1,34 +1,72 @@
 import type { CurrentUser, LoginRequest, RegisterRequest } from '~~/shared/types/api'
+import { errorStatus } from '~~/shared/utils/api-error'
 
 /** Назначение: состояние текущего пользователя в пределах Nuxt-приложения/SSR-запроса.
- * Данные: будущий GET /api/backend/auth/me → user → middleware, профиль и меню.
+ * Данные: GET /api/backend/auth/me → user → middleware, профиль и меню.
  * Связи: useApi.ts, access.global.ts, транспорт; перенос логики из 4 lab/src/stores/auth.js.
- * TODO: restoreSession через me, только 401 означает гостя; сетевую ошибку показывать отдельно.
- * TODO: login/register получают user после установки HttpOnly-cookie; logout очищает user и кеш.
  * Не хранить JWT в useState: его содержимое сериализуется в HTML. Нет ref на уровне модуля!
  * Проверка: F5 сохраняет реальную сессию, два браузера не разделяют user; ошибки не дают ложный вход.
  */
 export function useAuth() {
   const user = useState<CurrentUser | null>('auth:user', () => null)
   const initialized = useState('auth:initialized', () => false)
+  const pending = useState('auth:pending', () => false)
+  const api = useApi()
+  const app = useNuxtApp()
+  const times = useState<Record<string, number>>('students:times', () => ({}))
 
-  async function restoreSession() {
-    // TODO: вызвать useApi()('/auth/me'), проверить USER/ADMIN; восстановить до проверки middleware.
-    // Пока транспорт не реализован, пользователь остаётся гостем.
-    initialized.value = true
-    return user.value
+  function clearData() {
+    app.runWithContext(() => clearNuxtData(key => key.startsWith('students:')))
+    times.value = {}
   }
-  async function login(_input: LoginRequest): Promise<CurrentUser> {
-    // TODO: POST /auth/login, затем me; не сохранять пароль в useState.
-    throw new Error('Вход ещё не реализован: начните с server/api/backend/[...path].ts')
+
+  async function restoreSession(force = false): Promise<CurrentUser | null> {
+    if (initialized.value && !force) return user.value
+    // Promise находится в текущем NuxtApp, а не общем модуле сервера.
+    if (app._smRestore) return app._smRestore
+    const request = (async () => {
+      try {
+        const current = await api<CurrentUser>('/auth/me')
+        if (!['USER', 'ADMIN'].includes(current.role) || typeof current.username !== 'string') throw new Error('Некорректный профиль Java')
+        user.value = current
+        initialized.value = true
+        return current
+      } catch (cause) {
+        if (errorStatus(cause) !== 401) throw cause
+        user.value = null
+        initialized.value = true
+        clearData()
+        return null
+      }
+    })()
+    app._smRestore = request
+    try { return await request } finally { delete app._smRestore }
   }
-  async function register(_input: RegisterRequest): Promise<CurrentUser> {
-    // TODO: POST /auth/register, затем me. Роль назначает Java, поля role в запросе нет.
-    throw new Error('Регистрация ещё не реализована')
+  async function authenticate(path: string, input: LoginRequest | RegisterRequest) {
+    pending.value = true
+    try {
+      await api(path, { method: 'POST', body: input })
+      clearData()
+      const current = await restoreSession(true)
+      if (!current) throw new Error('Не удалось восстановить пользователя после входа')
+      return current
+    } finally { pending.value = false }
+  }
+  async function login(input: LoginRequest): Promise<CurrentUser> {
+    return authenticate('/auth/login', input)
+  }
+  async function register(input: RegisterRequest): Promise<CurrentUser> {
+    return authenticate('/auth/register', input)
   }
   async function logout(): Promise<void> {
-    // TODO: POST /auth/logout; в finally очистить user, clearNuxtData для students:*, перейти на /login.
-    throw new Error('Выход ещё не реализован')
+    pending.value = true
+    try { await api('/auth/logout', { method: 'POST' }) }
+    finally {
+      user.value = null
+      initialized.value = true
+      clearData()
+      pending.value = false
+    }
   }
-  return { user, initialized, restoreSession, login, register, logout }
+  return { user, initialized, pending, restoreSession, login, register, logout }
 }

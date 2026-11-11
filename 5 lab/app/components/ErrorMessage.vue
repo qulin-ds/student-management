@@ -1,13 +1,11 @@
 <!-- Назначение: единое отображение сетевых, API- и validation-ошибок. -->
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  error: {
-    type: Object,
-    default: null,
-  },
-})
+// Компонент принимает нормализованную ошибку useApi или ошибку SSR useAsyncData.
+// Проверка: details рядом с сообщением; Nuxt statusCode и обычный status одинаково поддержаны.
+const props = defineProps<{ error?: { message?: string; status?: number; statusCode?: number; details?: Record<string, string> | string[] } | null }>()
+const status = computed(() => props.error?.status ?? props.error?.statusCode)
 
 const details = computed(() => {
   const value = props.error?.details
@@ -30,8 +28,8 @@ const details = computed(() => {
         {{ key }}: {{ value }}
       </li>
     </ul>
-    <p v-if="error.status === 403">Недостаточно прав.</p>
-    <p v-else-if="error.status === 404">Запись не найдена.</p>
-    <p v-else-if="!error.status">Проверьте подключение к серверу.</p>
+    <p v-if="status === 403">Недостаточно прав.</p>
+    <p v-else-if="status === 404">Запись не найдена.</p>
+    <p v-else-if="!status">Проверьте подключение к серверу.</p>
   </div>
 </template>

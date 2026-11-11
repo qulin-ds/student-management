@@ -1,17 +1,10 @@
-<script setup>
+<script setup lang="ts">
 // Таблица студентов с переходом в карточку и действиями администратора.
-import { RouterLink } from 'vue-router'
-
-defineProps({
-  students: {
-    type: Array,
-    default: () => [],
-  },
-  isAdmin: Boolean,
-  pending: Boolean,
-})
-
-defineEmits(['remove', 'sort'])
+import type { SortField, StudentDto } from '~~/shared/types/api'
+// Страница передаёт DTO и роль; таблица только отображает их и сообщает о действиях.
+// Проверка: USER не видит действий записи; ссылки используют именно ISU.
+withDefaults(defineProps<{ students?: StudentDto[]; isAdmin?: boolean; pending?: boolean }>(), { students: () => [] })
+defineEmits<{ remove: [isu: number]; sort: [field: SortField] }>()
 </script>
 
 <template>
@@ -41,10 +34,10 @@ defineEmits(['remove', 'sort'])
           <td>{{ student.is_foreign ? 'Да' : 'Нет' }}</td>
           <td>{{ student.note }}</td>
           <td>
-            <RouterLink :to="`/students/${student.ISU}`">Открыть</RouterLink>
+            <NuxtLink :to="`/students/${student.ISU}`">Открыть</NuxtLink>
             <template v-if="isAdmin">
               ·
-              <RouterLink :to="`/students/${student.ISU}/edit`">Изменить</RouterLink>
+              <NuxtLink :to="`/students/${student.ISU}/edit`">Изменить</NuxtLink>
               <button :disabled="pending" @click="$emit('remove', student.ISU)">Удалить</button>
             </template>
           </td>

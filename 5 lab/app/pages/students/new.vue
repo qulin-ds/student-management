@@ -41,8 +41,8 @@ function normalizeError(value: unknown): OperationError {
       source.statusMessage ??
       source.message ??
       'Не удалось создать студента. Повторите попытку.',
-    status: apiError?.status ?? source.statusCode ?? 0,
-    details: apiError?.details ?? {},
+    status: apiError?.status ?? source.statusCode ?? (source as { status?: number }).status ?? 0,
+    details: apiError?.details ?? (source as { details?: Record<string, string> }).details ?? {},
   }
 }
 

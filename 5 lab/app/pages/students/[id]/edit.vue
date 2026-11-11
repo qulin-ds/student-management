@@ -58,7 +58,7 @@ if (loadError.value) {
   const apiError = source.data?.error
 
   throw createError({
-    statusCode: apiError?.status ?? source.statusCode ?? 503,
+    statusCode: apiError?.status ?? source.statusCode ?? (source as { status?: number }).status ?? 503,
     statusMessage:
       apiError?.message ??
       source.statusMessage ??
@@ -93,8 +93,8 @@ function normalizeError(
       source.statusMessage ??
       source.message ??
       'Не удалось сохранить изменения. Повторите попытку.',
-    status: apiError?.status ?? source.statusCode ?? 0,
-    details: apiError?.details ?? {},
+    status: apiError?.status ?? source.statusCode ?? (source as { status?: number }).status ?? 0,
+    details: apiError?.details ?? (source as { details?: Record<string, string> }).details ?? {},
   }
 }
 

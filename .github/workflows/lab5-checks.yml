@@ -1,0 +1,48 @@
+name: Lab 5 frontend checks
+
+on:
+  push:
+    branches:
+      - lab5-syrch
+    paths:
+      - '5 lab/**'
+      - '.github/workflows/lab5-checks.yml'
+  pull_request:
+    branches:
+      - lab5-syrch
+    paths:
+      - '5 lab/**'
+      - '.github/workflows/lab5-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Typecheck, unit tests and production build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 5 lab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+          cache: npm
+          cache-dependency-path: '5 lab/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript and Nuxt typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
