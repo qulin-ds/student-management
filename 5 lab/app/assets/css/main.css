@@ -14,4 +14,8 @@ button, input, select, textarea { font: inherit; padding: .5rem; max-width: 100%
 :focus-visible { outline: 3px solid #7763ce; outline-offset: 3px; }
 [role=alert] { color: #a32945; }
 .table-scroll { overflow-x: auto; }
+.table-scroll table { min-width: 900px; }
+.table-scroll th { white-space: nowrap; overflow-wrap: normal; }
+.table-scroll th:last-child,
+.table-scroll td:last-child { white-space: nowrap; }
 @media (max-width: 600px) { header, main { padding: .75rem; } h1 { font-size: 1.45rem; } }
