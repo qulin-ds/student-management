@@ -7,9 +7,8 @@ TODO: после успеха очистить кеш карточки и спи
 definePageMeta({ requiresAuth: true, roles: ['ADMIN'], validate: route => /^\d{6}$/.test(String(route.params.id)) })
 </script>
 <template>
-  <LabTask title="Редактирование студента" source="4 lab/src/pages/StudentEditPage.vue" :tasks="[
-    'Загрузить запись при SSR и передать initialStudent в форму.',
-    'Отправить PUT с неизменным ISU; PATCH доступен отдельно, его DTO не содержит ISU.',
-    'Обновить кеш и перейти к карточке только после успешного ответа.',
-  ]"><StudentForm /></LabTask>
+  <section>
+    <h1>Редактирование студента</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

@@ -15,8 +15,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
-# В production режим просмотра закрыт по умолчанию, включать только для демонстрации каркаса.
-ENV NUXT_PUBLIC_LAB_PREVIEW=false
 COPY --from=build --chown=node:node /app/.output ./.output
 USER node
 EXPOSE 3000

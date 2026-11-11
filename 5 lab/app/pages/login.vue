@@ -6,9 +6,8 @@ TODO: перенести форму username/password, ошибки, pending и 
 definePageMeta({ guestOnly: true })
 </script>
 <template>
-  <LabTask title="Вход" source="4 lab/src/pages/LoginPage.vue" :tasks="[
-    'Добавить форму username (имя или email) и password, не сохранять пароль в SSR-состоянии.',
-    'Реализовать транспорт HttpOnly-cookie и useAuth.login; после входа запросить me.',
-    'Показать pending, 401 и сетевые ошибки; безопасно обработать query.redirect.',
-  ]" />
+  <section>
+    <h1>Вход</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

@@ -6,9 +6,8 @@ TODO: восстановление сессии при SSR, профиль и lo
 definePageMeta({ requiresAuth: true })
 </script>
 <template>
-  <LabTask title="Профиль пользователя" source="4 lab/src/pages/ProfilePage.vue" :tasks="[
-    'Показать username и role из настоящего GET /auth/me.',
-    'Добавить выход: Java /auth/logout, удаление cookie, user и кеша студентов.',
-    'Не добавлять редактирование профиля и email: текущий me их не предоставляет.',
-  ]" />
+  <section>
+    <h1>Профиль</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

@@ -5,11 +5,9 @@ import type { Role } from '~~/shared/types/api'
  * Связи: pages/*, useAuth.ts, .env.example; перенос beforeEach из 4 lab/src/router/index.js.
  * TODO: реализовать restoreSession; ошибки сети не превращать в гостя, показать 503 с повтором.
  * TODO: после входа разрешать redirect только внутри приложения: запретить //, /\ и страницы login/register.
- * Проверка: labPreview=false, F5 /profile → /login?redirect=...; USER → /students/new → /forbidden.
+ * Проверка: F5 /profile → /login?redirect=...; USER → /students/new → /forbidden.
  */
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Явный режим учебного просмотра. Он не делает API доступным и не создаёт пользователя.
-  if (useRuntimeConfig().public.labPreview) return
   const auth = useAuth()
   if (!auth.initialized.value) await auth.restoreSession()
   if (to.meta.requiresAuth && !auth.user.value) {

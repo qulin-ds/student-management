@@ -6,8 +6,8 @@ TODO: форма, pending, error.details, инвалидация после ус
 definePageMeta({ requiresAuth: true, roles: ['ADMIN'] })
 </script>
 <template>
-  <LabTask title="Добавление студента" source="4 lab/src/pages/StudentCreatePage.vue" :tasks="[
-    'Подключить StudentForm и отправку StudentCreateRequest через Nuxt-транспорт.',
-    'Показать ошибки 409/422; после 201 очистить кеш списка и перейти к data.ISU.',
-  ]"><StudentForm /></LabTask>
+  <section>
+    <h1>Добавление студента</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

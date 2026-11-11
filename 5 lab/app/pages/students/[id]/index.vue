@@ -12,9 +12,8 @@ definePageMeta({
 const route = useRoute()
 </script>
 <template>
-  <LabTask :title="`Карточка студента: ИСУ ${route.params.id}`" source="4 lab/src/pages/StudentPage.vue" :tasks="[
-    'Параметр [id] — существующий в Java ISU, отдельного student.id в DTO нет.',
-    'Запросить GET /user/students/{isu} при SSR и показать data. Этот маршрут пока не подтверждает существование записи.',
-    'Передать 404 Java в error.vue; другие ошибки обработать по статусу.',
-  ]" />
+  <section>
+    <h1>Карточка студента</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

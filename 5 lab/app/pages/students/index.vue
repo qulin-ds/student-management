@@ -8,14 +8,8 @@ TODO: после DELETE обновить кеш и скорректироват�
 definePageMeta({ requiresAuth: true, roles: ['USER', 'ADMIN'] })
 </script>
 <template>
-  <LabTask title="Список студентов" source="4 lab/src/pages/StudentsPage.vue" :tasks="[
-    'Загрузить первый список при SSR через Nuxt-транспорт; сейчас запросы не выполняются.',
-    'Перенести поиск и фильтры. Java ищет точное совпадение name, без подстроки.',
-    'Реализовать sort, page (с нуля), size (1–100), loading/error/empty и повтор.',
-    'Удаление только ADMIN; после успеха обновить все варианты кеша списка.',
-  ]">
-    <StudentFilters />
-    <StudentsTable />
-    <StudentPagination />
-  </LabTask>
+  <section>
+    <h1>Студенты</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>

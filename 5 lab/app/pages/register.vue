@@ -6,9 +6,8 @@ TODO: поля username/email/password/confirmPassword; последнее не 
 definePageMeta({ guestOnly: true })
 </script>
 <template>
-  <LabTask title="Регистрация" source="4 lab/src/pages/RegisterPage.vue" :tasks="[
-    'Перенести форму и проверку совпадения паролей. Username: 3–50 латинских букв, цифр и _.',
-    'Email до 254 символов; пароль 8–72 символа и не более 72 байт UTF-8.',
-    'Передать только RegisterRequest, получить cookie через транспорт, затем me.',
-  ]" />
+  <section>
+    <h1>Регистрация</h1>
+    <p>Раздел пока не подключён.</p>
+  </section>
 </template>
