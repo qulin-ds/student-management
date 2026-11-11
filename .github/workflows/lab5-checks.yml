@@ -1,6 +1,8 @@
 name: Lab 5 checks
 
 on:
+  workflow_dispatch:
+  
   push:
     branches:
       - lab5-syrch
