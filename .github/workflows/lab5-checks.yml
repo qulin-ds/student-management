@@ -1,4 +1,4 @@
-name: Lab 5 frontend checks
+name: Lab 5 checks
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
       - lab5-syrch
     paths:
       - '5 lab/**'
+      - '3 lab/**'
       - '.github/workflows/lab5-checks.yml'
   pull_request:
     branches:
       - lab5-syrch
     paths:
       - '5 lab/**'
+      - '3 lab/**'
       - '.github/workflows/lab5-checks.yml'
 
 permissions:
@@ -46,3 +48,89 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  integration:
+    name: Java H2 HTTP, JWT, SSR and browser CRUD
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 5 lab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: '3 lab/pom.xml'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+          cache: npm
+          cache-dependency-path: '5 lab/package-lock.json'
+
+      - name: Start isolated Java backend with in-memory H2
+        shell: bash
+        run: |
+          export SERVER_PORT=18080
+          export DB_URL='jdbc:h2:mem:lab5verify;MODE=PostgreSQL;DB_CLOSE_DELAY=-1'
+          export DB_USERNAME=sa
+          export DB_PASSWORD=''
+          export DB_DDL_GENERATION='create-or-extend-tables'
+          export ADMIN_USERNAME=lab5_admin
+          export ADMIN_EMAIL=lab5admin@example.test
+          export ADMIN_PASSWORD="$(openssl rand -hex 24)"
+          export JWT_ACCESS_SECRET="$(openssl rand -hex 32)"
+          export JWT_REFRESH_SECRET="$(openssl rand -hex 32)"
+          {
+            echo "TEST_ADMIN_USERNAME=$ADMIN_USERNAME"
+            echo "TEST_ADMIN_PASSWORD=$ADMIN_PASSWORD"
+          } >> "$GITHUB_ENV"
+          nohup mvn -B -f '../3 lab/pom.xml' spring-boot:run '-Dspring-boot.run.useTestClasspath=true' > "$RUNNER_TEMP/lab5-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/lab5-backend.pid"
+          for attempt in $(seq 1 120); do
+            status="$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/api/auth/me || true)"
+            if [ "$status" != '000' ] && [ -n "$status" ]; then
+              echo "Java backend answered HTTP $status"
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/lab5-backend.log"
+          echo 'Java backend did not become ready'
+          exit 1
+
+      - name: Install frontend dependencies and build
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real HTTP, JWT, SSR and browser CRUD tests
+        env:
+          TEST_DISPOSABLE_DB: 'yes'
+          TEST_JAVA_BASE: http://127.0.0.1:18080/api
+          TEST_BROWSER: 'yes'
+        run: npm run test:integration
+
+      - name: Print Java backend log on failure
+        if: failure()
+        shell: bash
+        run: cat "$RUNNER_TEMP/lab5-backend.log" || true
+
+      - name: Stop temporary Java backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/lab5-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/lab5-backend.pid")" 2>/dev/null || true
+          fi
