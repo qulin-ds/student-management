@@ -1,6 +1,7 @@
 <!-- Назначение: доступный индикатор ожидания сетевой операции. -->
-<script setup>
-defineProps({ active: Boolean })
+<script setup lang="ts">
+// Страница передаёт pending; компонент объявляет загрузку для screen reader.
+defineProps<{ active?: boolean }>()
 </script>
 
 <template>

@@ -1,0 +1,110 @@
+import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
+import { chromium } from 'playwright'
+
+/** Проверка настоящего интерфейса в изолированных профилях Chrome, без пользовательского профиля.
+ * Вызывается integration.mjs на одноразовой БД; screenshots/cookies на диск не сохраняются.
+ * Проверяем события форм, hydration, URL, кеш и удаление, которых не видно HTTP-тестам.
+ */
+export async function verifyBrowser({ base, adminUsername, adminPassword, sample, fixture }) {
+  const browser = await chromium.launch({ headless: true, ...(process.env.TEST_CHROME_PATH ? { executablePath: process.env.TEST_CHROME_PATH } : {}) })
+  const errors = []
+  try {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+    const page = await context.newPage()
+    page.on('pageerror', error => errors.push(error.message))
+    await page.goto(`${base}/login`)
+    await page.getByLabel('Имя пользователя или email').fill(adminUsername)
+    await page.getByLabel('Пароль', { exact: true }).fill(adminPassword)
+    await page.getByRole('button', { name: 'Войти', exact: true }).click()
+    await page.waitForURL(`${base}/students`)
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    await page.waitForLoadState('networkidle')
+    assert.equal(await page.getByRole('link', { name: 'Добавление', exact: true }).count(), 1)
+
+    // Быстро заменяем имя: устаревший поисковый запрос не должен победить новый.
+    await page.getByLabel('ФИО', { exact: true }).fill('Missing Name')
+    await page.getByLabel('ФИО', { exact: true }).fill(sample.name)
+    await page.waitForURL(url => url.searchParams.get('name') === sample.name)
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    await page.getByLabel('Иностранец').selectOption('false')
+    await page.getByRole('button', { name: 'Применить', exact: true }).click()
+    await page.waitForURL(url => url.searchParams.get('is_foreign') === 'false')
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    await page.getByRole('button', { name: 'ИСУ', exact: true }).click()
+    await page.waitForURL(url => url.searchParams.get('sort') === 'ISU,desc')
+    await page.getByLabel('Размер').selectOption('10')
+    await page.waitForURL(url => url.searchParams.get('size') === '10')
+    await page.reload()
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    assert.equal(new URL(page.url()).searchParams.get('is_foreign'), 'false')
+    await page.goto(`${base}/students?name=Ivan%20Ivanov&size=1&sort=ISU,asc`)
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    await page.getByRole('button', { name: 'Далее', exact: true }).click()
+    await page.waitForURL(url => url.searchParams.get('page') === '1')
+    await page.getByRole('row').filter({ hasText: fixture.note }).waitFor()
+    await page.reload()
+    await page.getByRole('row').filter({ hasText: fixture.note }).waitFor()
+    await page.getByLabel('Размер').selectOption('10')
+    await page.waitForURL(url => url.searchParams.get('page') === '0')
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    console.log('PASS browser login, search, false filter, sort, size and F5')
+
+    // Переходим в карточку и возвращаемся клиентскими ссылками: второй GET берётся из кеша.
+    let cardRequests = 0
+    page.on('request', request => { if (new URL(request.url()).pathname === `/api/backend/user/students/${sample.ISU}`) cardRequests++ })
+    await page.getByRole('row').filter({ hasText: sample.note }).getByRole('link', { name: 'Открыть', exact: true }).click()
+    await page.getByRole('heading', { name: 'Карточка студента', exact: true }).waitFor()
+    await page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('link', { name: 'Студенты', exact: true }).click()
+    await page.getByRole('row').filter({ hasText: sample.note }).getByRole('link', { name: 'Открыть', exact: true }).click()
+    await page.getByRole('heading', { name: 'Карточка студента', exact: true }).waitFor()
+    assert.equal(cardRequests, 1, 'Cached card unexpectedly requested twice')
+    await page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('link', { name: 'Студенты', exact: true }).click()
+    // Сдвигаем часы только браузера: проверяем TTL без ожидания 30 секунд реального времени.
+    await page.clock.install({ time: Date.now() })
+    await page.clock.fastForward(31_000)
+    await page.getByRole('row').filter({ hasText: sample.note }).getByRole('link', { name: 'Открыть', exact: true }).click()
+    await page.getByRole('heading', { name: 'Карточка студента', exact: true }).waitFor()
+    assert.equal(cardRequests, 2, 'Expired card cache was reused')
+    await page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('link', { name: 'Студенты', exact: true }).click()
+    await page.getByRole('row').filter({ hasText: fixture.note }).waitFor()
+    await page.getByLabel('ИСУ', { exact: true }).fill(String(fixture.ISU))
+    await page.getByRole('button', { name: 'Применить', exact: true }).click()
+    await page.waitForURL(url => url.searchParams.get('ISU') === String(fixture.ISU))
+    await page.getByRole('row').filter({ hasText: fixture.note }).waitFor()
+    page.once('dialog', dialog => dialog.accept())
+    await page.getByRole('button', { name: 'Удалить', exact: true }).click()
+    await page.getByText('Студенты не найдены.', { exact: true }).waitFor()
+    await page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('link', { name: 'Студенты', exact: true }).click()
+    await page.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    assert.equal(await page.getByRole('row').filter({ hasText: fixture.note }).count(), 0, 'Deleted student returned from old list cache')
+    await page.setViewportSize({ width: 360, height: 800 })
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Page overflows at mobile width')
+    console.log('PASS browser pagination, card cache/TTL, delete, invalidation and mobile width')
+
+    const other = await browser.newContext()
+    const userPage = await other.newPage()
+    userPage.on('pageerror', error => errors.push(error.message))
+    const username = `web_${randomUUID().slice(0, 8)}`
+    const password = randomUUID()
+    await userPage.goto(`${base}/register`)
+    await userPage.getByLabel('Имя пользователя', { exact: true }).fill(username)
+    await userPage.getByLabel('Email', { exact: true }).fill(`${randomUUID()}@example.test`)
+    await userPage.getByLabel('Пароль', { exact: true }).fill(password)
+    await userPage.getByLabel('Повторите пароль', { exact: true }).fill(password)
+    await userPage.getByRole('button', { name: 'Зарегистрироваться', exact: true }).click()
+    await userPage.waitForURL(`${base}/students`)
+    await userPage.getByRole('row').filter({ hasText: sample.note }).waitFor()
+    assert.equal(await userPage.getByRole('link', { name: 'Добавление', exact: true }).count(), 0)
+    assert.equal(await userPage.getByRole('button', { name: 'Удалить', exact: true }).count(), 0)
+    await userPage.goto(`${base}/profile`)
+    assert.ok((await userPage.locator('main').innerText()).includes(username))
+    assert.ok(!(await userPage.locator('main').innerText()).includes(adminUsername))
+    await userPage.getByRole('button', { name: 'Выйти', exact: true }).click()
+    await userPage.waitForURL(`${base}/login`)
+    await userPage.goto(`${base}/students`)
+    await userPage.waitForURL(url => url.pathname === '/login')
+    console.log('PASS browser registration, USER menu, isolated profile and logout')
+    assert.deepEqual(errors, [], 'Browser runtime errors')
+  } finally { await browser.close() }
+}

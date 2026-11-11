@@ -1,3 +1,4 @@
+
 /** Назначение: внешний JSON-контракт Java, общий для приложения и транспорта Nuxt.
  * Данные: DTO из 3 lab → useAuth/useStudents → страницы и компоненты.
  * Связи: AuthController, student/dto, common/error/ApiError; ориентир 4 lab/src/api/*.
