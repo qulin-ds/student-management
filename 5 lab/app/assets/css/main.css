@@ -1,21 +1,96 @@
 /* Назначение: адаптивный каркас; HTML layout/страниц → оформление в SSR и браузере.
-Связи: nuxt.config.ts и компоненты; переносить нужные правила 4 lab/src/styles/main.css.
-TODO: дополнить стили форм, таблицы и состояний по мере переноса компонентов.
-Проверка: 360px/768px/1280px, клавиатура, видимый фокус, отсутствие горизонтального переполнения страницы. */
-* { box-sizing: border-box; }
-:root { font: 16px/1.6 system-ui, sans-serif; color: #24334a; background: #f4f6fb; }
-body { margin: 0; min-width: 320px; }
-header, main { max-width: 1100px; margin: auto; padding: 1.25rem; }
-nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
-a { color: #4936a2; }
-section { padding: clamp(1rem, 3vw, 2rem); background: white; border: 1px solid #dce1ed; border-radius: .7rem; }
-code { overflow-wrap: anywhere; }
-button, input, select, textarea { font: inherit; padding: .5rem; max-width: 100%; }
-:focus-visible { outline: 3px solid #7763ce; outline-offset: 3px; }
-[role=alert] { color: #a32945; }
-.table-scroll { overflow-x: auto; }
-.table-scroll table { min-width: 900px; }
-.table-scroll th { white-space: nowrap; overflow-wrap: normal; }
+ * Связи: nuxt.config.ts и компоненты; переносить нужные правила 4 lab/src/styles/main.css.
+ * TODO: дополнить стили форм, таблицы и состояний по мере переноса компонентов.
+ * Проверка: 360px/768px/1280px, клавиатура, видимый фокус, отсутствие горизонтального переполнения страницы.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font: 16px/1.6 system-ui, sans-serif;
+  color: #24334a;
+  background: #f4f6fb;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+header,
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 1.25rem;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+a {
+  color: #4936a2;
+}
+
+section {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: white;
+  border: 1px solid #dce1ed;
+  border-radius: 0.7rem;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 0.5rem;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid #7763ce;
+  outline-offset: 3px;
+}
+
+[role='alert'] {
+  color: #a32945;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll table {
+  min-width: 900px;
+}
+
+.table-scroll th {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
 .table-scroll th:last-child,
-.table-scroll td:last-child { white-space: nowrap; }
-@media (max-width: 600px) { header, main { padding: .75rem; } h1 { font-size: 1.45rem; } }
+.table-scroll td:last-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  header,
+  main {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+  }
+}
