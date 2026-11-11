@@ -75,7 +75,10 @@ if (!initialStudent.value) {
 }
 
 // Приводит ошибку PUT к формату общего компонента ErrorMessage.
-function normalizeError(value: unknown): OperationError {
+function normalizeError(
+  value: unknown,
+  fallbackMessage = 'Не удалось загрузить данные студента.',
+): OperationError {
   const source = value as {
     data?: { error?: ApiError }
     statusCode?: number
@@ -123,7 +126,10 @@ async function updateStudent(payload: StudentCreateRequest) {
 
     await navigateTo(`/students/${isu.value}`)
   } catch (cause) {
-    error.value = normalizeError(cause)
+    error.value = normalizeError(
+      cause,
+      'Не удалось сохранить изменения. Повторите попытку.',
+    )
     fieldErrors.value = error.value.details
   } finally {
     pending.value = false

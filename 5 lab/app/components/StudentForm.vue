@@ -70,7 +70,9 @@ watch(() => props.initialStudent, fillForm, { immediate: true })
 
 // Возвращает сообщение для поля: сначала ошибка Java, затем локальная проверка.
 function fieldError(field: FieldName): string {
-  return props.errors[field] ?? validationErrors[field] ?? ''
+  const alias = field === 'checkin_date' ? 'checkinDate' : field === 'is_foreign' ? 'isForeign' : field
+
+  return props.errors[field] ?? props.errors[alias] ?? validationErrors[field] ?? ''
 }
 
 // Проверяет дату без зависимости от часового пояса браузера.
