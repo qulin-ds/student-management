@@ -5,6 +5,7 @@ on:
   
   push:
     branches:
+      - main
       - lab5-syrch
     paths:
       - '5 lab/**'
@@ -12,6 +13,7 @@ on:
       - '.github/workflows/lab5-checks.yml'
   pull_request:
     branches:
+      - main
       - lab5-syrch
     paths:
       - '5 lab/**'
