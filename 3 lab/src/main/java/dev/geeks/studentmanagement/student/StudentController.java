@@ -3,15 +3,35 @@ package dev.geeks.studentmanagement.student;
 import dev.geeks.studentmanagement.student.dto.*;
 import jakarta.validation.Valid;
 import java.util.Map;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 public class StudentController {
   private final StudentService service;
+  private final StudentChanges changes;
 
-  public StudentController(StudentService service) {
+  public StudentController(StudentService service, StudentChanges changes) {
     this.service = service;
+    this.changes = changes;
+  }
+
+  @GetMapping(value = "/api/user/students/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public ResponseEntity<SseEmitter> events() {
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noStore())
+        .header("X-Accel-Buffering", "no")
+        .body(changes.subscribe());
+  }
+
+  @GetMapping("/api/user/students/version")
+  public ResponseEntity<Map<String, String>> version() {
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noStore())
+        .body(Map.of("version", changes.version()));
   }
 
   @PostMapping("/api/user/students/search")

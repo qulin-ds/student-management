@@ -25,11 +25,7 @@ export function useStudents() {
 
   async function invalidate() {
     const keys = Object.keys(times.value)
-    times.value = {}
-
-    app.runWithContext(() =>
-      clearNuxtData((key) => key.startsWith('students:')),
-    )
+    for (const key of keys) times.value[key] = 0
 
     await app.runWithContext(() => refreshNuxtData(keys))
   }
@@ -79,6 +75,7 @@ export function useStudentList(
     key,
     async (_app, { signal }) => {
       const currentKey = key.value
+      service.times.value[currentKey] ??= 0
       const result = await service.api<PageResponse<StudentDto>>(
         '/user/students/search',
         {
@@ -88,6 +85,7 @@ export function useStudentList(
         },
       )
 
+      signal.throwIfAborted()
       service.times.value[currentKey] = Date.now()
       return result
     },
@@ -111,11 +109,13 @@ export function useStudentCard(isu: MaybeRefOrGetter<number>) {
     key,
     async (_app, { signal }) => {
       const currentKey = key.value
+      service.times.value[currentKey] ??= 0
       const result = await service.api<DataResponse<StudentDto>>(
         `/user/students/${toValue(isu)}`,
         { signal },
       )
 
+      signal.throwIfAborted()
       service.times.value[currentKey] = Date.now()
       return result.data
     },

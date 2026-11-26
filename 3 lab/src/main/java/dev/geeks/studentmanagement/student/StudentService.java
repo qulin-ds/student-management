@@ -15,6 +15,7 @@ import jakarta.validation.Validator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Set;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,10 +30,13 @@ public class StudentService {
       Set.of("ISU", "name", "group", "dormitory", "room", "checkinDate", "isForeign", "note");
   private final StudentRepository repository;
   private final Validator validator;
+  private final ApplicationEventPublisher events;
 
-  public StudentService(StudentRepository repository, Validator validator) {
+  public StudentService(
+      StudentRepository repository, Validator validator, ApplicationEventPublisher events) {
     this.repository = repository;
     this.validator = validator;
+    this.events = events;
   }
 
   @Transactional(readOnly = true)
@@ -117,6 +121,7 @@ public class StudentService {
         repository.findById(isu).orElseThrow(() -> new NotFoundException("Студент не найден"));
 
     repository.delete(student);
+    events.publishEvent(new StudentChanges.Changed());
   }
 
   @Transactional
@@ -141,6 +146,7 @@ public class StudentService {
 
     var student = StudentMapper.fromCreateRequest(request);
     var savedStudent = repository.saveAndFlush(student);
+    events.publishEvent(new StudentChanges.Changed());
 
     return StudentMapper.toDto(savedStudent);
   }
@@ -176,7 +182,9 @@ public class StudentService {
     student.setIsForeign(request.isForeign());
     student.setNote(request.note() == null ? "" : request.note());
 
-    return StudentMapper.toDto(repository.saveAndFlush(student));
+    var savedStudent = repository.saveAndFlush(student);
+    events.publishEvent(new StudentChanges.Changed());
+    return StudentMapper.toDto(savedStudent);
   }
 
   @Transactional

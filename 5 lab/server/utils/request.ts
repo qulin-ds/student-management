@@ -6,8 +6,13 @@ export async function requestBackend(
   method: string,
   body?: unknown,
   access?: string,
+  streamSignal?: AbortSignal,
 ) {
   let response: Response
+  const streamTimeout = new AbortController()
+  const timer = streamSignal
+    ? setTimeout(() => streamTimeout.abort(), 10_000)
+    : undefined
 
   try {
     response = await fetch(
@@ -15,7 +20,7 @@ export async function requestBackend(
       {
         method,
         headers: {
-          Accept: 'application/json',
+          Accept: streamSignal ? 'text/event-stream' : 'application/json',
           ...(body === undefined
             ? {}
             : { 'Content-Type': 'application/json' }),
@@ -24,7 +29,9 @@ export async function requestBackend(
             : {}),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
-        signal: AbortSignal.timeout(10_000),
+        signal: streamSignal
+          ? AbortSignal.any([streamSignal, streamTimeout.signal])
+          : AbortSignal.timeout(10_000),
         redirect: 'error',
       },
     )
@@ -32,6 +39,20 @@ export async function requestBackend(
     throw createError({
       statusCode: 503,
       message: 'Java-сервер недоступен. Повторите запрос.',
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (streamSignal && response.ok) {
+    if (response.body && response.headers.get('content-type')?.startsWith('text/event-stream')) {
+      return { status: response.status, data: response.body }
+    }
+
+    await response.body?.cancel()
+    throw createError({
+      statusCode: 502,
+      message: 'Java-сервер не открыл поток событий.',
     })
   }
 

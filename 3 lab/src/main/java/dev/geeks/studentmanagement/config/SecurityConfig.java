@@ -3,6 +3,7 @@ package dev.geeks.studentmanagement.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.geeks.studentmanagement.common.error.ApiError;
 import dev.geeks.studentmanagement.security.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import java.time.Instant;
 import java.util.Map;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -14,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.DispatcherTypeRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
@@ -39,6 +43,11 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(
+                        new AndRequestMatcher(
+                            new DispatcherTypeRequestMatcher(DispatcherType.ASYNC),
+                            new AntPathRequestMatcher("/api/user/students/events", "GET")))
+                    .permitAll()
+                    .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
                         "/api/auth/refresh",

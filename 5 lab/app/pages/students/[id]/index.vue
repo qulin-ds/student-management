@@ -36,7 +36,7 @@ watch(error, (cause) => {
     return
   }
 
-  if (errorStatus(cause) === 404) {
+  if (errorStatus(cause) === 404 && !deleting.value) {
     showError(
       createError({
         statusCode: 404,

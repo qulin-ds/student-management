@@ -1,3 +1,4 @@
+import { sendStream } from 'h3'
 import { forgetRotation, latestRefresh, requestBackend, rotateSession, tokenPair } from '../../utils/request'
 import type { TokenResponse } from '../../../shared/types/api'
 
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event) => {
     { method: 'GET', path: /^auth\/me$/ },
 
     { method: 'GET', path: /^user\/students$/ },
+    { method: 'GET', path: /^user\/students\/(events|version)$/ },
     { method: 'POST', path: /^user\/students\/search$/ },
     { method: 'GET', path: /^user\/students\/\d+$/ },
 
@@ -50,6 +52,11 @@ export default defineEventHandler(async (event) => {
       || (origin && origin !== getRequestURL(event).origin)) {
       throw createError({ statusCode: 403, message: 'Недопустимый источник запроса.' })
     }
+  }
+
+  const streaming = path === 'user/students/events'
+  if (streaming && getHeader(event, 'sec-fetch-site') === 'cross-site') {
+    throw createError({ statusCode: 403, message: 'Недопустимый источник запроса.' })
   }
 
   function clearSession() {
@@ -107,15 +114,27 @@ export default defineEventHandler(async (event) => {
   const body: unknown = method === 'GET' || method === 'DELETE' ? undefined : await readBody(event)
   const query = path === 'user/students' ? new URLSearchParams(getQuery(event) as Record<string, string>).toString() : ''
   const target = `${path}${query ? `?${query}` : ''}`
-  let result = await requestBackend(config.javaApiBase, target, method, body, access)
+  const connection = streaming ? new AbortController() : undefined
+  if (connection) {
+    event.node.res.once('close', () => connection.abort())
+  }
+  const request = (token?: string) =>
+    requestBackend(config.javaApiBase, target, method, body, token, connection?.signal)
+  let result = await request(access)
   if (result.status === 401 && refresh) {
     const rotated = await rotateSession(config.javaApiBase, refresh)
     if (rotated.status === 401) return unauthorized()
     if (rotated.status >= 400) return send(rotated)
     const pair = tokenPair(rotated.data)
     saveSession(pair)
-    result = await requestBackend(config.javaApiBase, target, method, body, pair.accessToken)
+    result = await request(pair.accessToken)
   }
   if (result.status === 401) return unauthorized()
+  if (streaming && result.data instanceof ReadableStream) {
+    setResponseHeader(event, 'Content-Type', 'text/event-stream')
+    setResponseHeader(event, 'Cache-Control', 'private, no-store, no-transform')
+    setResponseHeader(event, 'X-Accel-Buffering', 'no')
+    return sendStream(event, result.data)
+  }
   return send(result)
 })

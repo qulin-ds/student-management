@@ -121,6 +121,14 @@ watch(error, (cause) => {
   }
 })
 
+watch(data, (result) => {
+  const page = filters.value.page ?? 0
+  const lastPage = Math.max(0, (result?.totalPages ?? 0) - 1)
+  if (result?.page === page && page > lastPage) {
+    void setQuery({ ...filters.value, page: lastPage })
+  }
+})
+
 async function remove(isu: number) {
   if (
     !isAdmin.value ||
@@ -135,16 +143,6 @@ async function remove(isu: number) {
 
   try {
     await service.remove(isu)
-
-    if (
-      !data.value?.data.length &&
-      (filters.value.page ?? 0) > 0
-    ) {
-      await setQuery({
-        ...filters.value,
-        page: filters.value.page! - 1,
-      })
-    }
   } catch (cause) {
     actionError.value = cause as RequestError
   } finally {

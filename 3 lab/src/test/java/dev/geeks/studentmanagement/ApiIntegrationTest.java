@@ -11,6 +11,7 @@ import dev.geeks.studentmanagement.auth.repository.RefreshSessionRepository;
 import dev.geeks.studentmanagement.auth.repository.UserRepository;
 import dev.geeks.studentmanagement.security.JwtService;
 import java.time.*;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -76,6 +77,48 @@ class ApiIntegrationTest {
         + ",\"name\":\"Маша Иванова\",\"group\":\"P1234\",\"dormitory\":5,\"room\":"
         + room
         + ",\"checkin_date\":\"2026-09-01\",\"is_foreign\":false,\"note\":\"тест\"}";
+  }
+
+  @Test
+  void studentChangesReachAnOpenStreamAndPollingAfterCommit() throws Exception {
+    String events = "/api/user/students/events";
+    String version = "/api/user/students/version";
+    mvc.perform(get(events).accept("text/event-stream")).andExpect(status().isUnauthorized());
+    send(get(version), 401);
+
+    access =
+        send(
+                post("/api/auth/login")
+                    .content("{\"username\":\"testadmin\",\"password\":\"" + TEST_PASSWORD + "\"}"),
+                200)
+            .get("accessToken")
+            .asText();
+    String before = send(auth(get(version)), 200).get("version").asText();
+    var stream =
+        mvc.perform(auth(get(events)).accept("text/event-stream"))
+            .andExpect(status().isOk())
+            .andExpect(request().asyncStarted())
+            .andExpect(content().contentTypeCompatibleWith("text/event-stream"))
+            .andExpect(content().string(Matchers.containsString("data:" + before + "\n")))
+            .andReturn();
+
+    String studentPath = "/api/admin/students/746281";
+    try {
+      send(auth(post("/api/admin/students").content(student(746281, 1234))), 201);
+      String created = send(auth(get(version)), 200).get("version").asText();
+      assertNotEquals(before, created);
+      assertTrue(stream.getResponse().getContentAsString().contains("data:" + created + "\n"));
+
+      send(auth(delete(studentPath)), 204);
+      String deleted = send(auth(get(version)), 200).get("version").asText();
+      assertNotEquals(created, deleted);
+      assertTrue(stream.getResponse().getContentAsString().contains("data:" + deleted + "\n"));
+
+      send(auth(delete(studentPath)), 404);
+      assertEquals(deleted, send(auth(get(version)), 200).get("version").asText());
+    } finally {
+      stream.getRequest().getAsyncContext().complete();
+    }
   }
 
   @Test
