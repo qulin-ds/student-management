@@ -1,4 +1,3 @@
-// Назначение: состояние списка, карточки, CRUD и серверной пагинации.
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as api from '../api/students'

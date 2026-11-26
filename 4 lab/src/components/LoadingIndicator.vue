@@ -1,4 +1,3 @@
-<!-- Назначение: доступный индикатор ожидания сетевой операции. -->
 <script setup>
 defineProps({ active: Boolean })
 </script>

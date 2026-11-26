@@ -1,4 +1,3 @@
-// Назначение: маршруты SPA и клиентская проверка сессии и ролей.
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import LoginPage from '../pages/LoginPage.vue'

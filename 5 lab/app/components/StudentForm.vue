@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Назначение: общая типизированная форма создания и редактирования студента.
 import { reactive, watch } from 'vue'
 import type { StudentCreateRequest, StudentDto } from '~~/shared/types/api'
 
@@ -50,7 +49,6 @@ const form = reactive<FormState>({
 
 const validationErrors = reactive<FormErrors>({})
 
-// Заполняет черновик при открытии редактирования или смене исходной записи.
 function fillForm(student: StudentDto | null = null) {
   form.ISU = student?.ISU == null ? '' : String(student.ISU)
   form.name = student?.name ?? ''
@@ -68,7 +66,6 @@ function fillForm(student: StudentDto | null = null) {
 
 watch(() => props.initialStudent, fillForm, { immediate: true })
 
-// Возвращает сообщение для поля: сначала ошибка Java, затем локальная проверка.
 function fieldError(field: FieldName): string {
   const alias = field === 'checkin_date' ? 'checkinDate' : field === 'is_foreign' ? 'isForeign' : field
 
@@ -100,7 +97,6 @@ function isValidCheckinDate(value: string): boolean {
   return isRealDate && value >= '2016-01-01' && value <= today
 }
 
-// Проверяет поля и формирует полный DTO, который ожидает POST и PUT в Java.
 function validateForm(): StudentCreateRequest | null {
   const payload: StudentCreateRequest = {
     ISU: Number(form.ISU),
@@ -154,7 +150,6 @@ function validateForm(): StudentCreateRequest | null {
   return Object.keys(nextErrors).length === 0 ? payload : null
 }
 
-// Отправляет данные родительской странице только после локальной проверки.
 function submitForm() {
   if (props.pending) {
     return

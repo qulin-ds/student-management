@@ -1,10 +1,5 @@
 import type { TokenResponse } from '../../shared/types/api'
 
-/**
- * Транспорт к фиксированному Java API. Здесь нет проверки подписи JWT и работы с БД.
- * Вход: путь, метод, DTO и access. Выход: статус и JSON Java; сетевой сбой становится 503.
- * Связи: api/backend/[...path].ts. Проверка: Java offline, ошибки 422 и ответ DELETE 204.
- */
 export async function javaRequest(
   base: string,
   path: string,
@@ -83,10 +78,7 @@ export function tokenPair(value: unknown): TokenResponse {
   }
 }
 
-// Это не кеш студентов/профилей: только короткая координация ротации ОДНОЙ сессии.
-// Ключ — хеш refresh, значение — общий выполняющийся запрос и его результат на 5 секунд.
-// Так два SSR-запроса/вкладки со старой cookie получают одну и ту же новую пару.
-// Ограничение: один процесс Nuxt. Для нескольких реплик нужна общая координация сессий.
+// Параллельные запросы делят результат ротации в пределах одного процесса Nuxt.
 const rotations = new Map<
   string,
   Promise<Awaited<ReturnType<typeof javaRequest>>>

@@ -1,5 +1,3 @@
-// создание и проверка JWT токенов для аутентификации и авторизации
-
 package dev.geeks.studentmanagement.security;
 
 import dev.geeks.studentmanagement.auth.model.User;

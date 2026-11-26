@@ -1,4 +1,3 @@
-<!-- Назначение: создание студента через Java API и переход к созданной карточке. -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import type {
@@ -25,7 +24,6 @@ const pending = ref(false)
 const error = ref<OperationError | null>(null)
 const fieldErrors = ref<Record<string, string>>({})
 
-// Приводит ошибку Nuxt или Java к формату общего компонента ErrorMessage.
 function normalizeError(value: unknown): OperationError {
   const source = value as {
     data?: { error?: ApiError }
@@ -46,7 +44,6 @@ function normalizeError(value: unknown): OperationError {
   }
 }
 
-// Создаёт студента и открывает его карточку только после ответа 201.
 async function createStudent(payload: StudentCreateRequest) {
   if (pending.value) {
     return
@@ -80,7 +77,6 @@ async function createStudent(payload: StudentCreateRequest) {
   }
 }
 
-// Возвращает пользователя к списку без отправки данных.
 function cancelCreation() {
   return navigateTo('/students')
 }

@@ -1,5 +1,5 @@
 <script setup>
-// Серверная пагинация: API использует нумерацию страниц с нуля.
+// Нумерация страниц API начинается с нуля.
 defineProps({
   page: { type: Number, default: 0 },
   size: { type: Number, default: 20 },

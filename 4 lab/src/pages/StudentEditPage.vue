@@ -1,5 +1,4 @@
 <script setup>
-// Загружает запись студента и сохраняет её изменения.
 import { onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudentsStore } from '../stores/students'

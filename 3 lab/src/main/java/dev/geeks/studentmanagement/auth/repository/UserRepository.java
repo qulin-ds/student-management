@@ -1,6 +1,3 @@
-// предоставляет доступ к к пользователям , которыые хранятся в таблице app_users
-// наследование от JpaRepository
-
 package dev.geeks.studentmanagement.auth.repository;
 
 import dev.geeks.studentmanagement.auth.model.User;

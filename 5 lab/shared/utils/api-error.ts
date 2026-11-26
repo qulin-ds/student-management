@@ -1,9 +1,4 @@
-/**
- * Единая безопасная ошибка для компонентов. Вход — JSON Java/Nuxt, выход — message/status/details.
- * Не сохраняем исходный fetch request: в нём могут находиться пароль и Cookie.
- * Связи: useApi, ErrorMessage, страницы. Проверка: 422 показывает details, 503 — повтор запроса.
- */
-
+// Исходный запрос может содержать пароль и cookie.
 export interface RequestError extends Error {
   status: number
   details: Record<string, string>

@@ -1,5 +1,4 @@
 <script setup>
-// Общая форма создания и редактирования студента с клиентской валидацией.
 import { reactive, watch } from 'vue'
 
 const props = defineProps({

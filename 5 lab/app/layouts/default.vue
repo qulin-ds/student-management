@@ -1,9 +1,3 @@
-<!--
-  Назначение: общая навигация; вход — страница через slot.
-  Связи: app.vue, useAuth.ts; переносить навигацию из 4 lab/src/App.vue, RouterLink → NuxtLink.
-  Пользователь берётся из useAuth после middleware; выход очищает сессию и кеш.
-  Проверка: меню USER/ADMIN и ширина 360px.
--->
 <script setup lang="ts">
 const auth = useAuth()
 const { user, pending } = auth
@@ -29,7 +23,6 @@ async function logout() {
   }
 }
 
-// Если API окончательно вернул 401, убираем защищённый экран и возвращаем на вход.
 watch(user, (current, previous) => {
   if (!current && previous && route.meta.requiresAuth) {
     navigateTo({

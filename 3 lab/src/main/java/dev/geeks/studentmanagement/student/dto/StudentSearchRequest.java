@@ -1,4 +1,3 @@
-// DTO фильтров списка студентов, сортировки и серверной пагинации.
 package dev.geeks.studentmanagement.student.dto;
 
 public record StudentSearchRequest(

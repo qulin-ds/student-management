@@ -1,4 +1,3 @@
-<!-- Назначение: форма входа и переход на запрошенную внутреннюю страницу. -->
 <script setup>
 import { reactive } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'

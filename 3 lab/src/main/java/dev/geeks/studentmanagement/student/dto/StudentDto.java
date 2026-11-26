@@ -1,5 +1,3 @@
-// DTO ответа API для студента, внешний контракт не должен зависеть напрямую от JPA сущности
-
 package dev.geeks.studentmanagement.student.dto;
 
 public record StudentDto(

@@ -1,6 +1,3 @@
-// перехватываем запросы с методами QUERY и перенаправялем на др маршрут
-// нужен для поиска
-
 package dev.geeks.studentmanagement.config;
 
 import jakarta.servlet.FilterChain;

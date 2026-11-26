@@ -3,11 +3,7 @@ import type {
   StudentSort,
 } from '../types/api'
 
-/**
- * Фильтры URL/формы → канонический DTO поиска. Порядок ключей стабилен для кеша.
- * Пустые поля исчезают, false сохраняется; сервер Java всё равно проверяет запрос сам.
- * Связи: useStudents и страница списка. Проверка: F5, page=0, is_foreign=false, сортировка даты.
- */
+// Стабильный порядок полей нужен для ключа кеша.
 export function studentFilters(
   input: Record<string, unknown>,
 ): StudentSearchRequest {

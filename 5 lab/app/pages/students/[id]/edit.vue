@@ -1,4 +1,3 @@
-<!-- Назначение: SSR-загрузка студента и сохранение изменений через Java API. -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type {
@@ -29,7 +28,6 @@ const fieldErrors = ref<Record<string, string>>({})
 const isu = computed(() => Number(route.params.id))
 const requestKey = computed(() => `student-edit:${String(route.params.id)}`)
 
-// Загружает исходную запись на сервере, чтобы форма была заполнена до гидратации.
 const {
   data: initialStudent,
   error: loadError,
@@ -47,7 +45,6 @@ const {
   },
 )
 
-// Преобразует ошибку загрузки в HTTP-ошибку Nuxt, сохраняя исходный статус Java.
 if (loadError.value) {
   const source = loadError.value as {
     data?: { error?: ApiError }
@@ -74,7 +71,6 @@ if (!initialStudent.value) {
   })
 }
 
-// Приводит ошибку PUT к формату общего компонента ErrorMessage.
 function normalizeError(
   value: unknown,
   fallbackMessage = 'Не удалось загрузить данные студента.',
@@ -98,7 +94,6 @@ function normalizeError(
   }
 }
 
-// Отправляет полный DTO; ИСУ берётся из URL и не может быть изменён формой.
 async function updateStudent(payload: StudentCreateRequest) {
   if (pending.value) {
     return
@@ -136,7 +131,6 @@ async function updateStudent(payload: StudentCreateRequest) {
   }
 }
 
-// Возвращает к карточке без сохранения изменений.
 function cancelEditing() {
   return navigateTo(`/students/${isu.value}`)
 }

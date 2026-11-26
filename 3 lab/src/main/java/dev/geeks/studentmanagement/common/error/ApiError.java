@@ -1,5 +1,3 @@
-// единый формат ошибки API, все exception handler должны возвращать объект такого вида
-
 package dev.geeks.studentmanagement.common.error;
 
 import java.time.Instant;

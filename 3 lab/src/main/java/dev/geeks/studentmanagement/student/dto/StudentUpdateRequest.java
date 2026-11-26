@@ -1,5 +1,3 @@
-// полный (PUT) или частичный (PATCH (могут быть null поля)) обновления студента
-
 package dev.geeks.studentmanagement.student.dto;
 
 public record StudentUpdateRequest(

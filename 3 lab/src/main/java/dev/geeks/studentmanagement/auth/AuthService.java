@@ -1,6 +1,3 @@
-// реализация того , что описали в AuthController
-// по сути основная бизнес логика авторизации
-
 package dev.geeks.studentmanagement.auth;
 
 import dev.geeks.studentmanagement.auth.dto.LoginRequest;

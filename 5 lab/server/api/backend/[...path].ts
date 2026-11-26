@@ -1,23 +1,13 @@
 import { forgetRotation, javaRequest, latestRefresh, rotateSession, tokenPair } from '../../utils/java'
 import type { TokenResponse } from '../../../shared/types/api'
 
-/** Назначение: ТОЛЬКО транспорт frontend → Java, не второй backend с бизнес-логикой.
- * Вход: /api/backend/auth/*, /user/students/*, /admin/students/*; Java имеет те же пути после /api.
- * Выход: JSON/статус Java; токены после входа уходят только в HttpOnly-cookie.
- * Связи: useApi.ts, useAuth.ts, runtimeConfig.javaApiBase; контракт и запуск в README.
- * Проверка: реальные USER/ADMIN, logout, истёкший access, Java offline; токены отсутствуют в HTML/payload.
- * Не переносить БД, хеширование, проверку подписи JWT или правила студентов в этот файл.
- */
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'private, no-store')
 
-  // Например: "auth/login" или "user/students/123"
   const path = getRouterParam(event, 'path') ?? ''
 
-  // Например: GET, POST, DELETE
   const method = event.method
 
-  // Разрешённые сочетания метода и пути из Java-контроллеров
   const allowedRoutes = [
     { method: 'POST', path: /^auth\/login$/ },
     { method: 'POST', path: /^auth\/register$/ },
@@ -35,7 +25,6 @@ export default defineEventHandler(async (event) => {
     { method: 'DELETE', path: /^admin\/students\/\d+$/ },
   ]
 
-  // Ищем хотя бы одно правило, подходящее под запрос
   const isAllowed = allowedRoutes.some((route) => {
     return route.method === method && route.path.test(path)
   })
@@ -54,8 +43,7 @@ export default defineEventHandler(async (event) => {
   const access = getCookie(event, accessName)
   const refresh = getCookie(event, refreshName)
 
-  // Custom header нельзя отправить HTML-формой. Чужой JS потребует CORS preflight,
-  // а OPTIONS и CORS здесь не разрешены. Origin и Fetch Metadata дают второй барьер.
+  // Защита от CSRF: заголовок клиента, Origin и Fetch Metadata.
   if (method !== 'GET') {
     const origin = getHeader(event, 'origin')
     if (getHeader(event, 'x-student-client') !== '1'
@@ -70,8 +58,7 @@ export default defineEventHandler(async (event) => {
     deleteCookie(event, refreshName, cookieOptions)
   }
   function saveSession(pair: TokenResponse) {
-    // Cookie живут до конца браузерной сессии. Реальный срок JWT проверяет Java.
-    // Даже после истечения access он остаётся доступен для попытки refresh.
+    // Просроченный access остаётся доступен для обновления сессии.
     setCookie(event, accessName, pair.accessToken, cookieOptions)
     setCookie(event, refreshName, pair.refreshToken, cookieOptions)
   }

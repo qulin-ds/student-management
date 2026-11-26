@@ -1,4 +1,3 @@
-<!-- Назначение: фильтры полей студента и сортировка через v-model:filters. -->
 <script setup>
 import { computed } from 'vue'
 

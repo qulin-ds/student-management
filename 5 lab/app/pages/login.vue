@@ -1,9 +1,3 @@
-<!--
-  Назначение: вход; форма → useAuth.login → Nuxt-транспорт → Java /api/auth/login.
-  Связи: useAuth.ts, ErrorMessage.vue, middleware; перенос 4 lab/src/pages/LoginPage.vue.
-  Форма хранит пароль только локально; после входа переходит на безопасный внутренний URL.
-  Проверка: неверный пароль не создаёт сессию, успешный вход переживает F5, токен недоступен document.cookie.
--->
 <script setup lang="ts">
 import type { RequestError } from '~~/shared/utils/api-error'
 

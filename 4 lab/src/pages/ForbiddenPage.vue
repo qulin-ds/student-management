@@ -1,4 +1,3 @@
-<!-- Назначение: страница 403 для авторизованного пользователя без нужной роли. -->
 <script setup>
 import { RouterLink } from 'vue-router'
 </script>

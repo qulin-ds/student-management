@@ -1,8 +1,3 @@
-# Назначение: собрать SSR-приложение и запустить Node, не статический nginx.
-# Вход: package-lock.json и исходники; выход: .output. Java и БД запускаются отдельно.
-# Связи: .dockerignore, nuxt.config.ts, .env.example; ориентир из 4 lab — только этапы сборки.
-# TODO: после реализации cookies использовать HTTPS и NUXT_COOKIE_SECURE=true.
-# Проверка: команды docker build/run в README; backend не требуется для сборки заглушек.
 FROM node:24.21.0-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./

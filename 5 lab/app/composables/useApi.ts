@@ -1,13 +1,6 @@
 import { requestError } from '~~/shared/utils/api-error'
 import type { CurrentUser } from '~~/shared/types/api'
 
-/**
- * Назначение: запросы к своему Nuxt-транспорту, без JWT в браузерном JavaScript.
- * Данные: страница → /api/backend/* → Java через server/api/backend/[...path].ts.
- * Связи: useAuth/useStudents, runtimeConfig.public.apiBase; источник 4 lab/src/api/http.js.
- * Refresh выполняется транспортом. Здесь нормализуем ошибку, переносим SSR-cookie и поддерживаем AbortSignal.
- * Проверка: SSR передаёт cookie только своему origin, браузер не обращается к Docker hostname Java.
- */
 export function useApi() {
   const config = useRuntimeConfig()
   const app = useNuxtApp()

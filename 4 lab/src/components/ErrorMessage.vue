@@ -1,4 +1,3 @@
-<!-- Назначение: единое отображение сетевых, API- и validation-ошибок. -->
 <script setup>
 import { computed } from 'vue'
 

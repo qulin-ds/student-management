@@ -1,7 +1,3 @@
-# Назначение: многоэтапная сборка frontend; вход контекст 4 lab, выход Nginx со статикой dist.
-# Взаимодействует с package-lock.json, vite.config.js и nginx.conf; API /api проксируется backend,
-# USER/ADMIN проверяет 3 lab. DTO в Docker не используются.
-# Проверка: docker compose up --build, открыть /students/100000/edit напрямую и обновить страницу.
 FROM node:24-alpine AS build
 WORKDIR /app
 COPY package*.json ./

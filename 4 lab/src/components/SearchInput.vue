@@ -1,5 +1,5 @@
 <script setup>
-// Контролируемое поле поиска по точному ФИО.
+// Поиск требует точного совпадения ФИО.
 defineProps({
   modelValue: {
     type: String,

@@ -1,4 +1,3 @@
-<!-- Назначение: общий каркас приложения с навигацией по состоянию сессии. -->
 <script setup>
 import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'

@@ -1,4 +1,3 @@
-// Назначение: REST API студентов через общий HTTP-клиент.
 import { request } from './http'
 
 function cleanFilters(filters) {

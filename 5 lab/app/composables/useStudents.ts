@@ -6,14 +6,6 @@ import type {
 } from '~~/shared/types/api'
 import { studentFilters } from '~~/shared/utils/student-filters'
 
-/**
- * Назначение: SSR-чтение списка/карточки, удаление и кеш текущего пользователя.
- * Данные: фильтры страницы → Java через useApi → PageResponse/StudentDto → компоненты.
- * Связи: pages/students/*, shared/types/api.ts; перенос из 4 lab/src/api/students.js и stores/students.js.
- * useAsyncData передаёт результат SSR в браузер без второго начального запроса.
- * Кеш живёт 30 секунд внутри NuxtApp; общего кеша персональных данных на сервере нет.
- * Проверка: исходный HTML содержит данные после реализации; смена фильтра/page меняет ключ, CRUD обновляет список.
- */
 export function useStudents() {
   const { user } = useAuth()
   const api = useApi()
@@ -39,8 +31,7 @@ export function useStudents() {
       clearNuxtData((key) => key.startsWith('students:')),
     )
 
-    // Обновляем существующие обработчики, включая открытый список или карточку.
-    // Неактивные варианты уже очищены и при возвращении загрузятся заново.
+    // Активные запросы обновляются сразу, остальные — при возврате на страницу.
     await app.runWithContext(() => refreshNuxtData(keys))
   }
 

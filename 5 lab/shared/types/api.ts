@@ -1,11 +1,4 @@
-/**
- * Назначение: внешний JSON-контракт Java, общий для приложения и транспорта Nuxt.
- * Данные: DTO из 3 lab → useAuth/useStudents → страницы и компоненты.
- * Связи: AuthController, student/dto, common/error/ApiError; ориентир 4 lab/src/api/*.
- * TODO: сверять изменения с Java, не подменять ISU на id и snake_case на camelCase.
- * Проверка: npm run typecheck и сравнение реального JSON; типы не валидируют сетевой ответ.
- */
-
+// Имена полей соответствуют JSON-контракту Java.
 export type Role = 'USER' | 'ADMIN'
 
 export interface CurrentUser {

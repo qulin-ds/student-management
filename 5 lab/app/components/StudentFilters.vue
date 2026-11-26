@@ -1,9 +1,6 @@
-<!-- Назначение: фильтры полей студента и сортировка через v-model:filters. -->
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Черновик фильтров приходит от страницы; компонент не мутирует props и не делает HTTP.
-// Проверка: is_foreign=false сохраняется, применение/сброс передаются родителю.
 const props = defineProps<{ filters: Record<string, unknown> }>()
 
 const emit = defineEmits<{

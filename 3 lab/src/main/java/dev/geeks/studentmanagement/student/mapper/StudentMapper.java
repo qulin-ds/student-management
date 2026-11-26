@@ -1,5 +1,3 @@
-// Mapper между Student сущностью и DTO, чтобы API не отдавал внутреннюю JPA модель напрямую
-
 package dev.geeks.studentmanagement.student.mapper;
 
 import dev.geeks.studentmanagement.student.dto.StudentCreateRequest;

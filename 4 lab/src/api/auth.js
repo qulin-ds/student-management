@@ -1,4 +1,3 @@
-// Назначение: HTTP-операции авторизации по контракту AuthController из 3 lab.
 import { request } from './http'
 
 export const login = (credentials) =>

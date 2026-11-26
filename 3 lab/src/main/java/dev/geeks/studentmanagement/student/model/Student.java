@@ -1,6 +1,3 @@
-// JPA сущность студента, задаем все поля
-// ИСУ должен быть уникальным идентификатором студента в API
-
 package dev.geeks.studentmanagement.student.model;
 
 import jakarta.persistence.Column;

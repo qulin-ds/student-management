@@ -1,9 +1,3 @@
-# Назначение: изолированный учебный стенд frontend + оригинальный 3 lab + новый PostgreSQL.
-# Вход .env, Dockerfile/Dockerfile.backend; выход http://localhost:8084 (или FRONTEND_PORT).
-# Backend: DB_DDL_GENERATION=create-or-extend-tables только для этой новой учебной базы.
-# JWT-ключи генерирует backend в /app/data; volume сохраняет их между рестартами.
-# API auth открыто, /user/students USER/ADMIN, /admin/students ADMIN; браузер обращается через Nginx.
-# Проверка: docker compose config, up --build; /api/auth/me -> 401; прямой SPA URL -> 200.
 services:
   frontend:
     build:
@@ -23,6 +17,7 @@ services:
       DB_URL: jdbc:postgresql://db:5432/student_management
       DB_USERNAME: lab4
       DB_PASSWORD: ${DB_PASSWORD:?Заполните DB_PASSWORD в .env}
+      # Создаём таблицы в отдельной учебной базе.
       DB_DDL_GENERATION: create-or-extend-tables
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}

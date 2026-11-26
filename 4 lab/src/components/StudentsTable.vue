@@ -1,5 +1,4 @@
 <script setup>
-// Таблица студентов с переходом в карточку и действиями администратора.
 import { RouterLink } from 'vue-router'
 
 defineProps({

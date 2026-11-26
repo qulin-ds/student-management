@@ -1,8 +1,5 @@
 package dev.geeks.studentmanagement.auth.model;
 
-// JPA entity пользователя: username, email, passwordHash, role.
-// Пароль нельзя хранить в открытом виде, только hash.
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 

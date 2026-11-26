@@ -1,5 +1,3 @@
-// Точка входа Spring Boot приложения
-
 package dev.geeks.studentmanagement;
 
 import org.springframework.boot.SpringApplication;

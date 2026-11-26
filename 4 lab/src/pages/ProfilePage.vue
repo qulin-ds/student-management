@@ -1,4 +1,3 @@
-<!-- Назначение: отображение профиля и завершение текущей сессии. -->
 <script setup>
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'

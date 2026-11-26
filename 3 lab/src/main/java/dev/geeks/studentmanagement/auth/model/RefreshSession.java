@@ -1,5 +1,3 @@
-// храним и описываем сессию пользователей: чья , когда началась , закончилась , была ли отозвана
-
 package dev.geeks.studentmanagement.auth.model;
 
 import jakarta.persistence.Column;

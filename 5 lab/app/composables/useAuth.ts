@@ -5,13 +5,7 @@ import type {
 } from '~~/shared/types/api'
 import { errorStatus } from '~~/shared/utils/api-error'
 
-/**
- * Назначение: состояние текущего пользователя в пределах Nuxt-приложения/SSR-запроса.
- * Данные: GET /api/backend/auth/me → user → middleware, профиль и меню.
- * Связи: useApi.ts, access.global.ts, транспорт; перенос логики из 4 lab/src/stores/auth.js.
- * Не хранить JWT в useState: его содержимое сериализуется в HTML. Нет ref на уровне модуля!
- * Проверка: F5 сохраняет реальную сессию, два браузера не разделяют user; ошибки не дают ложный вход.
- */
+// useState сериализуется в HTML, поэтому JWT остаются в HttpOnly-cookie.
 export function useAuth() {
   const user = useState<CurrentUser | null>('auth:user', () => null)
   const initialized = useState('auth:initialized', () => false)

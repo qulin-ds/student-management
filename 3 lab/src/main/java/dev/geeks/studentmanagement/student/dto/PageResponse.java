@@ -1,5 +1,3 @@
-// Универсальный DTO ответа для пагинации
-
 package dev.geeks.studentmanagement.student.dto;
 
 import java.util.List;

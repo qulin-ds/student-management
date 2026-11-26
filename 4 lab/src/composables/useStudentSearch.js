@@ -1,4 +1,3 @@
-// Назначение: RxJS-поиск с debounce, отменой fetch и восстановлением потока после ошибок.
 import { EMPTY, Observable, Subject, timer } from 'rxjs'
 import { catchError, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators'
 import { onUnmounted, ref } from 'vue'

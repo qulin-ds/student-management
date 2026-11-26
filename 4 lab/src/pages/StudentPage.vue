@@ -1,4 +1,3 @@
-<!-- Назначение: загрузка карточки студента и административные действия. -->
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'

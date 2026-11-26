@@ -1,6 +1,3 @@
-// создаем админов из настроек окружения
-// админская версия AuthService , где построение админов
-
 package dev.geeks.studentmanagement.config;
 
 import dev.geeks.studentmanagement.auth.dto.RegisterRequest;

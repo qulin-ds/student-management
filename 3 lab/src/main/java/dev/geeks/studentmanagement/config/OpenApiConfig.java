@@ -1,5 +1,3 @@
-// настройка дки API , используем в Swagger UI
-
 package dev.geeks.studentmanagement.config;
 
 import io.swagger.v3.oas.models.*;

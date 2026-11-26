@@ -1,5 +1,3 @@
-// Repository студентов: CRUD, поиск по ИСУ, фильтрация, сортировка и пагинация через JPA
-
 package dev.geeks.studentmanagement.student.repository;
 
 import dev.geeks.studentmanagement.student.model.Student;

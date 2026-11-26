@@ -1,4 +1,3 @@
-<!-- Назначение: страница списка, фильтров, RxJS-поиска и серверной пагинации. -->
 <script setup>
 import { computed, onMounted, reactive, watch } from 'vue'
 import { storeToRefs } from 'pinia'

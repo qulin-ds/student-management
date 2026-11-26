@@ -1,7 +1,3 @@
-// главный обработчик ошибок
-// мы не пишем для каждого контроллера свой обработчик , а делаем 1 глобальный
-// по которому все работают
-
 package dev.geeks.studentmanagement.common.error;
 
 import dev.geeks.studentmanagement.common.exception.*;

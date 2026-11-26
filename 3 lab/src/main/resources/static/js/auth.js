@@ -1,4 +1,3 @@
-// Один помощник для защищённых запросов и автоматического обновления токенов.
 function saveTokens(tokens) {
   sessionStorage.setItem("tokens", JSON.stringify(tokens));
 }

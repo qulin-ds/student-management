@@ -1,5 +1,3 @@
-// настройка взаимодействия с Spring Data JPA с бд через EclipseLink
-
 package dev.geeks.studentmanagement.config;
 
 import jakarta.persistence.EntityManagerFactory;

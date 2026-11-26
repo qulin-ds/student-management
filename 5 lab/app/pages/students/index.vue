@@ -1,11 +1,3 @@
-<!--
-  Назначение: SSR-список; фильтры URL → POST /api/user/students/search → PageResponse → компоненты.
-  Связи: useStudents.ts, useApi.ts, StudentFilters/StudentsTable/StudentPagination.
-  Перенос: 4 lab/src/pages/StudentsPage.vue; первый onMounted заменить await useFetch/useAsyncData.
-  Фильтры берутся из URL; изменение имени отменяет старый запрос и ждёт 300 мс.
-  После DELETE обновляем кеш; если страница опустела, переходим на предыдущую.
-  Проверка: view-source содержит реальные строки после реализации, F5 сохраняет фильтры, page=0 — первая страница.
--->
 <script setup lang="ts">
 import type {
   SortField,

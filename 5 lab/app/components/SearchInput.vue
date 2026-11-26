@@ -1,7 +1,5 @@
 <script setup lang="ts">
-// Контролируемое поле поиска по точному ФИО.
-// Только ввод: значение приходит от страницы, новое значение уходит через v-model.
-// Проверка: ввод обновляет фильтр name; задержкой и отменой HTTP управляет страница.
+// Поиск требует точного совпадения ФИО.
 withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: '' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()

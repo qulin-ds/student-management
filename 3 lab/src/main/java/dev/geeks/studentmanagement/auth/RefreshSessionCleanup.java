@@ -1,6 +1,3 @@
-// периодческая очистка старых refresh сессий
-// основной принцип сессий реализуется здесь
-
 package dev.geeks.studentmanagement.auth;
 
 import java.time.Instant;

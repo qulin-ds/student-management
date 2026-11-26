@@ -1,9 +1,3 @@
-<!--
-  Назначение: регистрация; форма → useAuth.register → POST /api/auth/register в Java.
-  Связи: useAuth.ts, shared/types/api.ts; перенос 4 lab/src/pages/RegisterPage.vue.
-  Подтверждение пароля проверяется в браузере и не отправляется Java; role назначает backend.
-  Проверка: 409 для занятого email, 422 для полей, после успеха реальный пользователь USER и F5.
--->
 <script setup lang="ts">
 import {
   requestError,

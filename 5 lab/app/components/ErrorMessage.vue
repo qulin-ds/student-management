@@ -1,9 +1,6 @@
-<!-- Назначение: единое отображение сетевых, API- и validation-ошибок. -->
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Компонент принимает нормализованную ошибку useApi или ошибку SSR useAsyncData.
-// Проверка: details рядом с сообщением; Nuxt statusCode и обычный status одинаково поддержаны.
 const props = defineProps<{ error?: { message?: string; status?: number; statusCode?: number; details?: Record<string, string> | string[] } | null }>()
 const status = computed(() => props.error?.status ?? props.error?.statusCode)
 

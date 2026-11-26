@@ -1,5 +1,4 @@
 <script setup>
-// Создаёт студента и открывает карточку после успешного ответа backend.
 import { useRouter } from 'vue-router'
 import { useStudentsStore } from '../stores/students'
 import StudentForm from '../components/StudentForm.vue'

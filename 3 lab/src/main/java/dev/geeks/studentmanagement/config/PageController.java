@@ -1,6 +1,3 @@
-// связываем URL адреса с html-ми
-// что отображать при том или ином адресе
-
 package dev.geeks.studentmanagement.config;
 
 import org.springframework.core.io.*;

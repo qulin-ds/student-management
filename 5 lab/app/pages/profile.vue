@@ -1,9 +1,3 @@
-<!--
-  Назначение: профиль; GET /api/auth/me → useAuth.user → username/role на странице.
-  Связи: useAuth.ts, middleware; перенос 4 lab/src/pages/ProfilePage.vue.
-  Middleware восстанавливает профиль до SSR; выход доступен в общем меню.
-  Проверка: F5 показывает тот же профиль; logout отзывает refresh и удаляет cookie, чужой профиль не появляется.
--->
 <script setup lang="ts">
 definePageMeta({ requiresAuth: true })
 

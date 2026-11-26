@@ -1,9 +1,6 @@
 <script setup lang="ts">
-// Таблица студентов с переходом в карточку и действиями администратора.
 import type { SortField, StudentDto } from '~~/shared/types/api'
 
-// Страница передаёт DTO и роль; таблица только отображает их и сообщает о действиях.
-// Проверка: USER не видит действий записи; ссылки используют именно ISU.
 withDefaults(
   defineProps<{
     students?: StudentDto[]

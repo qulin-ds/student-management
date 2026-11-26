@@ -1,10 +1,3 @@
-<!--
-  Назначение: SSR-карточка; route.params.id — ИСУ → GET /api/user/students/{isu} → ответ.data.
-  Связи: useStudents.detailKey, useApi, error.vue; перенос 4 lab/src/pages/StudentPage.vue.
-  useStudentCard ждёт SSR-ответ и обновляется при смене id; только 404 Java означает отсутствие студента.
-  Действия ADMIN скрыты в интерфейсе, а окончательные права проверяет Java.
-  Проверка: открыть URL напрямую; неверный формат и отсутствующий ИСУ дают HTTP 404, 401/503 не становятся 404.
--->
 <script setup lang="ts">
 import {
   errorStatus,

@@ -13,14 +13,7 @@ class StudentTextNormalizationTest {
   void trimsCreationFieldsButKeepsSpacesBetweenWords() {
     var request =
         new StudentCreateRequest(
-            123456,
-            "  Маша Иванова  ",
-            "  P1234  ",
-            5,
-            1234,
-            " 2020-09-01 ",
-            false,
-            "  заметка  ");
+            123456, "  Маша Иванова  ", "  P1234  ", 5, 1234, " 2020-09-01 ", false, "  заметка  ");
 
     assertEquals("Маша Иванова", request.name());
     assertEquals("P1234", request.group());
@@ -30,8 +23,7 @@ class StudentTextNormalizationTest {
 
   @Test
   void patchKeepsMissingFieldsAndTrimsProvidedValues() {
-    var request =
-        new StudentUpdateRequest(null, "  P1234  ", null, null, null, null, "   ");
+    var request = new StudentUpdateRequest(null, "  P1234  ", null, null, null, null, "   ");
 
     assertNull(request.name());
     assertNull(request.checkinDate());
@@ -45,8 +37,7 @@ class StudentTextNormalizationTest {
         new StudentSearchRequest(
             null, "   ", "\t ", null, null, null, null, null, null, null, null);
     var empty =
-        new StudentSearchRequest(
-            null, null, null, null, null, null, null, null, null, null, null);
+        new StudentSearchRequest(null, null, null, null, null, null, null, null, null, null, null);
 
     assertEquals("", request.name());
     assertEquals("", request.group());

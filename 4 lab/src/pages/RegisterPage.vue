@@ -1,4 +1,3 @@
-<!-- Назначение: регистрация пользователя с ролью USER и автоматический вход. -->
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'

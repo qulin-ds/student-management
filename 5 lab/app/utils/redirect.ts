@@ -1,7 +1,3 @@
-/**
- * После входа допускаем только локальный адрес; внешние URL и циклы входа отбрасываем.
- * Вход: query.redirect. Выход: путь для navigateTo. Проверка: //evil, /\\evil, /login.
- */
 export function loginDestination(value: unknown) {
   if (
     typeof value !== 'string' ||

@@ -1,6 +1,3 @@
-// DTO создания студента, проверка полей выполняется через Bean Validation
-// описываем поля , которые клиент должен передать при создании студента (сущности)
-
 package dev.geeks.studentmanagement.student.dto;
 
 import jakarta.validation.constraints.*;

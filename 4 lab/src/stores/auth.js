@@ -1,4 +1,3 @@
-// Назначение: единое состояние пользователя и жизненного цикла сессии.
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as authApi from '../api/auth'

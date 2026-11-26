@@ -1,13 +1,6 @@
 import type { Role } from '~~/shared/types/api'
 import { errorStatus } from '~~/shared/utils/api-error'
 
-/**
- * Назначение: SSR- и клиентская навигация по сессии и ролям (не проверка прав Java).
- * Вход: meta.requiresAuth/meta.roles и useAuth; выход: страница, /login либо /forbidden.
- * Связи: pages/*, useAuth.ts, .env.example; перенос beforeEach из 4 lab/src/router/index.js.
- * Сеть не означает выход: показываем страницу ошибки с возможностью повторить запрос.
- * Проверка: F5 /profile → /login?redirect=...; USER → /students/new → /forbidden.
- */
 export default defineNuxtRouteMiddleware(async (to) => {
   if (!to.meta.requiresAuth && !to.meta.guestOnly) {
     return
