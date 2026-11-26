@@ -12,9 +12,7 @@
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt typecheck",
-    "test": "node --test tests/filters.test.mjs",
-    "test:integration": "node tests/integration.mjs"
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "nuxt": "4.6.4",
@@ -22,7 +20,6 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "playwright": "^1.65.0",
     "typescript": "~5.9.3",
     "vue-tsc": "^3.1.0"
   }

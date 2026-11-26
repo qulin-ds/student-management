@@ -31,7 +31,6 @@ if (error.value && errorStatus(error.value) === 404) {
   })
 }
 
-// Один компонент может обслуживать несколько ИСУ при клиентской навигации.
 watch(error, (cause) => {
   if (!cause) {
     return
@@ -63,7 +62,6 @@ async function remove() {
   deleting.value = true
 
   try {
-    // Не обновляем удалённую активную карточку: она закономерно вернёт 404.
     await service.api(
       `/admin/students/${isu.value}`,
       { method: 'DELETE' },

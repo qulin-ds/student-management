@@ -1,4 +1,4 @@
-import { forgetRotation, javaRequest, latestRefresh, rotateSession, tokenPair } from '../../utils/java'
+import { forgetRotation, latestRefresh, requestBackend, rotateSession, tokenPair } from '../../utils/request'
 import type { TokenResponse } from '../../../shared/types/api'
 
 export default defineEventHandler(async (event) => {
@@ -43,7 +43,6 @@ export default defineEventHandler(async (event) => {
   const access = getCookie(event, accessName)
   const refresh = getCookie(event, refreshName)
 
-  // Защита от CSRF: заголовок клиента, Origin и Fetch Metadata.
   if (method !== 'GET') {
     const origin = getHeader(event, 'origin')
     if (getHeader(event, 'x-student-client') !== '1'
@@ -58,11 +57,10 @@ export default defineEventHandler(async (event) => {
     deleteCookie(event, refreshName, cookieOptions)
   }
   function saveSession(pair: TokenResponse) {
-    // Просроченный access остаётся доступен для обновления сессии.
     setCookie(event, accessName, pair.accessToken, cookieOptions)
     setCookie(event, refreshName, pair.refreshToken, cookieOptions)
   }
-  function send(result: Awaited<ReturnType<typeof javaRequest>>) {
+  function send(result: Awaited<ReturnType<typeof requestBackend>>) {
     setResponseStatus(event, result.status)
     return result.data
   }
@@ -75,7 +73,7 @@ export default defineEventHandler(async (event) => {
     try {
       if (refresh) {
         const current = await latestRefresh(refresh)
-        const result = await javaRequest(config.javaApiBase, path, method, { refreshToken: current })
+        const result = await requestBackend(config.javaApiBase, path, method, { refreshToken: current })
         await forgetRotation(refresh)
         await forgetRotation(current)
         return send(result)
@@ -83,17 +81,15 @@ export default defineEventHandler(async (event) => {
       setResponseStatus(event, 204)
       return
     } finally {
-      // Cookie удаляются даже при недоступной Java. Сбой отзыва показываем клиенту.
       clearSession()
     }
   }
 
   if (path === 'auth/login' || path === 'auth/register') {
     const body: unknown = await readBody(event)
-    const result = await javaRequest(config.javaApiBase, path, method, body)
+    const result = await requestBackend(config.javaApiBase, path, method, body)
     if (result.status >= 400) return send(result)
     saveSession(tokenPair(result.data))
-    // Сохраняем 201 регистрации, но не отдаём TokenResponse браузерному JavaScript.
     setResponseStatus(event, result.status)
     return { success: true }
   }
@@ -109,18 +105,16 @@ export default defineEventHandler(async (event) => {
 
   if (!access && !refresh) return unauthorized()
   const body: unknown = method === 'GET' || method === 'DELETE' ? undefined : await readBody(event)
-  // Пробрасываем query только для предусмотренного контроллером GET списка.
   const query = path === 'user/students' ? new URLSearchParams(getQuery(event) as Record<string, string>).toString() : ''
   const target = `${path}${query ? `?${query}` : ''}`
-  let result = await javaRequest(config.javaApiBase, target, method, body, access)
+  let result = await requestBackend(config.javaApiBase, target, method, body, access)
   if (result.status === 401 && refresh) {
     const rotated = await rotateSession(config.javaApiBase, refresh)
     if (rotated.status === 401) return unauthorized()
     if (rotated.status >= 400) return send(rotated)
     const pair = tokenPair(rotated.data)
     saveSession(pair)
-    // Повторяем исходный запрос ровно один раз; 403 никогда не вызывает refresh.
-    result = await javaRequest(config.javaApiBase, target, method, body, pair.accessToken)
+    result = await requestBackend(config.javaApiBase, target, method, body, pair.accessToken)
   }
   if (result.status === 401) return unauthorized()
   return send(result)

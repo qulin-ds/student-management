@@ -5,7 +5,6 @@ import type {
 } from '~~/shared/types/api'
 import { errorStatus } from '~~/shared/utils/api-error'
 
-// useState сериализуется в HTML, поэтому JWT остаются в HttpOnly-cookie.
 export function useAuth() {
   const user = useState<CurrentUser | null>('auth:user', () => null)
   const initialized = useState('auth:initialized', () => false)
@@ -31,7 +30,6 @@ export function useAuth() {
       return user.value
     }
 
-    // Promise находится в текущем NuxtApp, а не общем модуле сервера.
     if (app._smRestore) {
       return app._smRestore
     }

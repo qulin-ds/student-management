@@ -1,4 +1,3 @@
-# Генерируются Nuxt/npm; исходники и package-lock.json сохраняются в Git.
 node_modules/
 .nuxt/
 .output/
@@ -14,5 +13,4 @@ node_modules/
 *.backup
 data/
 dumps/
-coverage/
 *.log

@@ -1,6 +1,6 @@
 import type { TokenResponse } from '../../shared/types/api'
 
-export async function javaRequest(
+export async function requestBackend(
   base: string,
   path: string,
   method: string,
@@ -29,7 +29,6 @@ export async function javaRequest(
       },
     )
   } catch {
-    // Не включаем URL с телом запроса или токен в ошибку и логи.
     throw createError({
       statusCode: 503,
       message: 'Java-сервер недоступен. Повторите запрос.',
@@ -78,10 +77,9 @@ export function tokenPair(value: unknown): TokenResponse {
   }
 }
 
-// Параллельные запросы делят результат ротации в пределах одного процесса Nuxt.
 const rotations = new Map<
   string,
-  Promise<Awaited<ReturnType<typeof javaRequest>>>
+  Promise<Awaited<ReturnType<typeof requestBackend>>>
 >()
 
 const sessionKey = async (token: string) => {
@@ -104,7 +102,6 @@ export async function rotateSession(base: string, refresh: string) {
     return previous
   }
 
-  // Не вытесняем активные refresh: иначе повторный запрос ротирует тот же токен второй раз.
   if (rotations.size >= 256) {
     throw createError({
       statusCode: 503,
@@ -112,7 +109,7 @@ export async function rotateSession(base: string, refresh: string) {
     })
   }
 
-  const request = javaRequest(
+  const request = requestBackend(
     base,
     'auth/refresh',
     'POST',
@@ -136,7 +133,6 @@ export async function rotateSession(base: string, refresh: string) {
 }
 
 export async function latestRefresh(refresh: string) {
-  // Выход ждёт уже начатую ротацию и отзывает актуальный refresh, а не старый.
   const pending = rotations.get(await sessionKey(refresh))
 
   if (!pending) {

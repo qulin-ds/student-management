@@ -10,7 +10,6 @@ export function useApi() {
   const user = useState<CurrentUser | null>('auth:user', () => null)
   const initialized = useState('auth:initialized', () => false)
 
-  // Передавать cookie можно только внутреннему endpoint того же приложения.
   if (
     !config.public.apiBase.startsWith('/') ||
     config.public.apiBase.startsWith('//')
@@ -54,7 +53,6 @@ export function useApi() {
         },
       )
     } catch (cause) {
-      // AbortSignal — отмена старого поиска, а не ошибка для пользователя.
       if (options.signal?.aborted) {
         throw cause
       }
@@ -68,7 +66,6 @@ export function useApi() {
       const cookies = response.headers.getSetCookie()
 
       if (cookies.length) {
-        // Внутренний Set-Cookie сам не дойдёт до браузера: добавляем во внешний SSR-ответ.
         const existing = outgoing.value
         outgoing.value = [
           ...(Array.isArray(existing)
@@ -79,7 +76,6 @@ export function useApi() {
           ...cookies,
         ]
 
-        // Следующий запрос этого же SSR должен использовать НОВУЮ пару, не исходный Cookie.
         const jar = new Map(
           String(event.context.smCookie ?? incoming.cookie ?? '')
             .split(';')

@@ -1,4 +1,3 @@
-// Имена полей соответствуют JSON-контракту Java.
 export type Role = 'USER' | 'ADMIN'
 
 export interface CurrentUser {
@@ -15,7 +14,6 @@ export interface RegisterRequest extends LoginRequest {
   email: string
 }
 
-// Только серверный транспорт должен получать пару; не помещать её в useState/SSR payload.
 export interface TokenResponse {
   accessToken: string
   refreshToken: string

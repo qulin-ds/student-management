@@ -63,7 +63,6 @@ async function createStudent(payload: StudentCreateRequest) {
       throw new Error('Сервер не вернул ИСУ созданного студента')
     }
 
-    // Ошибка незавершённого кеша не должна отменять уже успешное создание.
     await students.invalidate().catch((cause: unknown) => {
       console.warn('Не удалось обновить кеш студентов:', cause)
     })

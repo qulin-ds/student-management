@@ -3,7 +3,6 @@ import type {
   StudentSort,
 } from '../types/api'
 
-// Стабильный порядок полей нужен для ключа кеша.
 export function studentFilters(
   input: Record<string, unknown>,
 ): StudentSearchRequest {

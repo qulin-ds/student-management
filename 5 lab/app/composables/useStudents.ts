@@ -31,7 +31,6 @@ export function useStudents() {
       clearNuxtData((key) => key.startsWith('students:')),
     )
 
-    // Активные запросы обновляются сразу, остальные — при возврате на страницу.
     await app.runWithContext(() => refreshNuxtData(keys))
   }
 

@@ -72,7 +72,6 @@ function fieldError(field: FieldName): string {
   return props.errors[field] ?? props.errors[alias] ?? validationErrors[field] ?? ''
 }
 
-// Проверяет дату без зависимости от часового пояса браузера.
 function isValidCheckinDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false

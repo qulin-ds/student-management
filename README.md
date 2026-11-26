@@ -37,7 +37,7 @@ flowchart LR
 | Страницы и компоненты | `5 lab/app/pages`, `app/components`, `app/layouts` | Интерфейс, формы, список и карточка студента; файловая маршрутизация |
 | Состояние и загрузка | `5 lab/app/composables` | `useAuth`, `useApi`, `useStudents`; получение данных при SSR, кеш списка и карточек на 30 секунд, обновление после CRUD |
 | Доступ к страницам | `5 lab/app/middleware` | Перенаправление гостей и проверка роли для интерфейса |
-| Сервер Nuxt | `5 lab/server/api/backend`, `server/utils/java.ts` | Передача запросов к Java, HttpOnly-cookie с токенами, обновление сессии и перенос cookie из SSR-ответа |
+| Сервер Nuxt | `5 lab/server/api/backend`, `server/utils/request.ts` | Передача запросов к Java, HttpOnly-cookie с токенами, обновление сессии и перенос cookie из SSR-ответа |
 | Java API | `3 lab/src/main/java/dev/geeks/studentmanagement` | Пакеты `auth` и `student`: контроллеры, DTO, сервисы, модели и репозитории; `security` и `config`: JWT и права доступа; `common`: единые ошибки |
 | Хранение | PostgreSQL через JPA/EclipseLink | Студенты, пользователи и refresh-сессии |
 

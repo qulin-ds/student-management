@@ -1,4 +1,3 @@
-// Исходный запрос может содержать пароль и cookie.
 export interface RequestError extends Error {
   status: number
   details: Record<string, string>

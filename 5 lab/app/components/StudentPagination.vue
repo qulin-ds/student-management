@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Нумерация страниц API начинается с нуля.
 withDefaults(
   defineProps<{
     page?: number

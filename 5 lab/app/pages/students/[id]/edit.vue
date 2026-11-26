@@ -114,7 +114,6 @@ async function updateStudent(payload: StudentCreateRequest) {
       body: request,
     })
 
-    // Ошибка незавершённого кеша не должна отменять уже успешное изменение.
     await students.invalidate().catch((cause: unknown) => {
       console.warn('Не удалось обновить кеш студентов:', cause)
     })

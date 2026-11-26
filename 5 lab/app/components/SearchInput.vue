@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Поиск требует точного совпадения ФИО.
 withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: '' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()

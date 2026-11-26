@@ -35,7 +35,6 @@ const busy = computed(
 )
 const isAdmin = computed(() => user.value?.role === 'ADMIN')
 
-// В адресе только известные поля DTO; значения строковые, false явно сохраняется.
 function setQuery(input: StudentSearchRequest) {
   const query = Object.fromEntries(
     Object.entries(studentFilters(input)).map(([key, value]) => [
@@ -98,7 +97,7 @@ watch(
       return
     }
 
-    clear() // Сразу отменяем старый HTTP, не ждём окончания debounce.
+    clear()
     searching.value = true
     timer = setTimeout(() => {
       void apply()
